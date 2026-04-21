@@ -171,6 +171,37 @@
 <body>
   <div id="app"></div>
   <script>
+    const LEVELS = [
+      { items: 4,  time: 8 },
+      { items: 6,  time: 6 },
+      { items: 8,  time: 5 },
+      { items: 10, time: 4 },
+      { items: 12, time: 3 },
+    ];
+
+    const EMOJIS = [
+      '🔑', '🕯️', '🔍', '🗝️', '📜', '🔎', '💼', '🪄',
+      '🧩', '🪪', '📷', '🧲', '🔭', '🪬', '💡', '🗂️',
+    ];
+
+    const state = {
+      phase: 'idle',
+      level: 0,
+      score: 0,
+      solution: [],
+      placement: {},
+      selected: null,
+      timer: 0,
+    };
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
   </script>
 </body>
 </html>
