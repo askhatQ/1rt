@@ -72,14 +72,25 @@
       background: color-mix(in srgb, var(--accent) 15%, var(--surface));
     }
 
+    @keyframes flash-correct {
+      0%, 100% { background: color-mix(in srgb, var(--ok)   15%, var(--surface)); }
+      50%      { background: color-mix(in srgb, var(--ok)   55%, var(--surface)); }
+    }
+    @keyframes flash-wrong {
+      0%, 100% { background: color-mix(in srgb, var(--fail) 15%, var(--surface)); }
+      50%      { background: color-mix(in srgb, var(--fail) 55%, var(--surface)); }
+    }
+
     .cell.correct {
       border-color: var(--ok);
       background: color-mix(in srgb, var(--ok) 15%, var(--surface));
+      animation: flash-correct 300ms ease 2;
     }
 
     .cell.wrong {
       border-color: var(--fail);
       background: color-mix(in srgb, var(--fail) 15%, var(--surface));
+      animation: flash-wrong 300ms ease 2;
     }
 
     .tray {
@@ -257,7 +268,7 @@
       }
     }
 
-    function runTimer(seconds, onEnd) {
+    function runTimer(seconds, onEnd, onTick) {
       stopTimer();
 
       const fill = document.querySelector('.timer-bar__fill');
@@ -283,6 +294,8 @@
         } else {
           fill.style.background = 'var(--ok)';
         }
+
+        if (onTick) onTick(Math.ceil(ratio * seconds));
 
         if (ratio <= 0) {
           stopTimer();
@@ -313,30 +326,79 @@
       timerBar.innerHTML = '<div class="timer-bar__fill"></div>';
       app.appendChild(timerBar);
 
-      const label = document.createElement('div');
+      const labelRow = document.createElement('div');
+      labelRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;width:100%';
+
+      const label = document.createElement('span');
       label.style.cssText = 'font-size:13px;opacity:0.6';
-      label.textContent = 'Запомни расположение!';
-      app.appendChild(label);
+      label.textContent = 'Запомни!';
+
+      const countdown = document.createElement('span');
+      countdown.style.cssText = 'font-size:22px;font-weight:800;color:var(--accent);min-width:36px;text-align:right';
+      countdown.textContent = lv.time;
+
+      labelRow.appendChild(label);
+      labelRow.appendChild(countdown);
+      app.appendChild(labelRow);
 
       renderGrid(true);
-      runTimer(lv.time, startPlace);
+      runTimer(lv.time, readyPause, secs => {
+        if (countdown.isConnected) countdown.textContent = secs;
+      });
+    }
+
+    function readyPause() {
+      stopTimer();
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+
+      const screen = document.createElement('div');
+      screen.style.cssText = `
+        display:flex;flex-direction:column;align-items:center;gap:16px;
+        background:var(--surface);border:2px solid var(--border);
+        border-radius:16px;padding:48px 28px;width:100%;text-align:center;
+      `;
+      screen.innerHTML = `
+        <div style="font-size:44px">🕵️</div>
+        <div style="font-size:26px;font-weight:800;color:var(--accent)">Расставляй!</div>
+      `;
+      app.appendChild(screen);
+      setTimeout(startPlace, 1000);
     }
 
     function startPlace() {
+      const app = document.getElementById('app');
+      app.innerHTML = '';
       state.phase = 'place';
       state.placement = {};
       state.selected = null;
 
+      const header = document.createElement('div');
+      header.style.cssText = 'display:flex;justify-content:space-between;width:100%;font-size:14px;color:var(--accent)';
+      header.innerHTML = `<span>Уровень ${state.level + 1} / ${LEVELS.length}</span><span>Счёт: ${state.score}</span>`;
+      app.appendChild(header);
+
+      const timerRow = document.createElement('div');
+      timerRow.style.cssText = 'display:flex;align-items:center;gap:8px;width:100%';
+      const timerBar = document.createElement('div');
+      timerBar.className = 'timer-bar';
+      timerBar.style.flex = '1';
+      timerBar.innerHTML = '<div class="timer-bar__fill"></div>';
+      const secDisplay = document.createElement('span');
+      secDisplay.style.cssText = 'font-size:13px;color:var(--accent);min-width:28px;text-align:right';
+      secDisplay.textContent = '35с';
+      timerRow.appendChild(timerBar);
+      timerRow.appendChild(secDisplay);
+      app.appendChild(timerRow);
+
+      const label = document.createElement('div');
+      label.style.cssText = 'font-size:13px;opacity:0.6';
+      label.textContent = 'Расставь улики по местам!';
+      app.appendChild(label);
+
       renderGrid(false);
 
-      const app = document.getElementById('app');
-
-      const label = app.querySelector('div[style*="opacity"]');
-      if (label) label.textContent = 'Расставь улики по местам!';
-
-      let tray = app.querySelector('.tray');
-      if (tray) tray.remove();
-      tray = document.createElement('div');
+      const tray = document.createElement('div');
       tray.className = 'tray';
       app.appendChild(tray);
 
@@ -356,13 +418,11 @@
       }
 
       function selectItem(emoji) {
-        console.log('item selected:', emoji);
         state.selected = state.selected === emoji ? null : emoji;
         refreshTray();
       }
 
       function placeItem(idx) {
-        console.log('cell clicked:', idx, 'selected:', state.selected);
         if (state.phase !== 'place') return;
         if (!state.solution.some(s => s.index === idx)) return;
 
@@ -383,6 +443,10 @@
 
         renderGrid(false);
         refreshTray();
+
+        if (Object.keys(state.placement).length === state.solution.length) {
+          setTimeout(checkResult, 400);
+        }
       }
 
       trayEmojis.forEach(emoji => {
@@ -396,9 +460,7 @@
           e.dataTransfer.effectAllowed = 'move';
           item.style.opacity = '0.5';
         });
-        item.addEventListener('dragend', () => {
-          item.style.opacity = '';
-        });
+        item.addEventListener('dragend', () => { item.style.opacity = ''; });
         tray.appendChild(item);
         trayItems.push({ item, emoji });
       });
@@ -418,13 +480,12 @@
       const btn = document.createElement('button');
       btn.className = 'btn';
       btn.textContent = 'Проверить';
-      btn.addEventListener('click', () => {
-        stopTimer();
-        checkResult();
-      });
+      btn.addEventListener('click', () => { stopTimer(); checkResult(); });
       app.appendChild(btn);
 
-      runTimer(35, checkResult);
+      runTimer(35, checkResult, secs => {
+        if (secDisplay.isConnected) secDisplay.textContent = secs + 'с';
+      });
     }
 
     function checkResult() {
@@ -489,16 +550,18 @@
       btnRepeat.style.background = 'var(--border)';
       btnRepeat.textContent = 'Повторить';
       btnRepeat.addEventListener('click', restartLevel);
-
-      const btnNext = document.createElement('button');
-      btnNext.className = 'btn';
-      btnNext.textContent = isLastLevel ? 'В начало' : 'Дальше →';
-      btnNext.addEventListener('click', isLastLevel ? restartAll : nextLevel);
-
       btnRow.appendChild(btnRepeat);
-      btnRow.appendChild(btnNext);
+
       panel.appendChild(btnRow);
       app.appendChild(panel);
+
+      setTimeout(() => {
+        const btnNext = document.createElement('button');
+        btnNext.className = 'btn';
+        btnNext.textContent = isLastLevel ? 'В начало' : 'Дальше →';
+        btnNext.addEventListener('click', isLastLevel ? restartAll : nextLevel);
+        btnRow.appendChild(btnNext);
+      }, 650);
     }
 
     function nextLevel() {
