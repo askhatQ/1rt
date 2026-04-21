@@ -430,6 +430,92 @@
       panel.appendChild(btnRow);
       app.appendChild(panel);
     }
+
+    function startLevel() {
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+      state.phase = 'memorize';
+      state.placement = {};
+      state.selected = null;
+
+      const lv = LEVELS[state.level];
+      const indices = shuffle([...Array(16).keys()]).slice(0, lv.items);
+      const emojis = shuffle(EMOJIS).slice(0, lv.items);
+      state.solution = indices.map((index, i) => ({ index, emoji: emojis[i] }));
+
+      const header = document.createElement('div');
+      header.style.cssText = 'display:flex;justify-content:space-between;width:100%;font-size:14px;color:var(--accent)';
+      header.innerHTML = `<span>Уровень ${state.level + 1}</span><span>Счёт: ${state.score}</span>`;
+      app.appendChild(header);
+
+      const timerBar = document.createElement('div');
+      timerBar.className = 'timer-bar';
+      timerBar.innerHTML = '<div class="timer-bar__fill"></div>';
+      app.appendChild(timerBar);
+
+      const label = document.createElement('div');
+      label.style.cssText = 'font-size:13px;opacity:0.6';
+      label.textContent = 'Запомни расположение!';
+      app.appendChild(label);
+
+      renderGrid(true);
+
+      runTimer(lv.time, startPlace);
+    }
+
+    function nextLevel() {
+      if (state.level < LEVELS.length - 1) {
+        state.level++;
+      }
+      startLevel();
+    }
+
+    function restartLevel() {
+      startLevel();
+    }
+
+    function restartAll() {
+      const hs = parseInt(localStorage.getItem('md_highscore') || '0');
+      if (state.score > hs) localStorage.setItem('md_highscore', state.score);
+      state.score = 0;
+      state.level = 0;
+      showStart();
+    }
+
+    function showStart() {
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+
+      const hs = parseInt(localStorage.getItem('md_highscore') || '0');
+
+      const screen = document.createElement('div');
+      screen.style.cssText = `
+        display:flex;flex-direction:column;align-items:center;gap:20px;
+        background:var(--surface);border:2px solid var(--border);
+        border-radius:16px;padding:36px 28px;width:100%;text-align:center;
+      `;
+      screen.innerHTML = `
+        <div style="font-size:40px">🔍</div>
+        <div style="font-size:26px;font-weight:800;letter-spacing:1px">Memory Detective</div>
+        <div style="font-size:14px;opacity:0.6;max-width:280px">
+          Запомни, где лежат улики, и расставь их по местам
+        </div>
+        ${hs > 0 ? `<div style="font-size:13px;color:var(--accent)">Рекорд: ${hs} очков</div>` : ''}
+      `;
+
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.textContent = 'Начать';
+      btn.addEventListener('click', () => {
+        state.score = 0;
+        state.level = 0;
+        startLevel();
+      });
+      screen.appendChild(btn);
+      app.appendChild(screen);
+    }
+
+    showStart();
   </script>
 </body>
 </html>
