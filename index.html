@@ -282,6 +282,81 @@
         }
       }, 100);
     }
+
+    function startPlace() {
+      state.phase = 'place';
+      state.placement = {};
+      state.selected = null;
+
+      renderGrid(false);
+
+      const app = document.getElementById('app');
+
+      let tray = app.querySelector('.tray');
+      if (tray) tray.remove();
+      tray = document.createElement('div');
+      tray.className = 'tray';
+      app.appendChild(tray);
+
+      const trayEmojis = shuffle(state.solution.map(s => s.emoji));
+
+      function refreshTray() {
+        const trayCounts = {};
+        trayEmojis.forEach(e => { trayCounts[e] = (trayCounts[e] || 0) + 1; });
+        const remaining = { ...trayCounts };
+        Object.values(state.placement).forEach(e => { if (remaining[e]) remaining[e]--; });
+        document.querySelectorAll('.tray-item').forEach(item => {
+          item.classList.remove('selected');
+          const avail = (remaining[item.dataset.emoji] || 0) > 0;
+          item.style.opacity = avail ? '' : '0.3';
+          item.style.pointerEvents = avail ? '' : 'none';
+          if (item.dataset.emoji === state.selected) item.classList.add('selected');
+        });
+      }
+
+      trayEmojis.forEach(emoji => {
+        const item = document.createElement('div');
+        item.className = 'tray-item';
+        item.textContent = emoji;
+        item.dataset.emoji = emoji;
+        item.addEventListener('click', () => {
+          state.selected = state.selected === emoji ? null : emoji;
+          refreshTray();
+        });
+        tray.appendChild(item);
+      });
+
+      const grid = app.querySelector('.grid');
+      grid.addEventListener('click', e => {
+        const cell = e.target.closest('.cell');
+        if (!cell) return;
+        const idx = parseInt(cell.dataset.index);
+        const isSolutionSlot = state.solution.some(s => s.index === idx);
+        if (!isSolutionSlot || !state.selected) return;
+
+        const prevIdx = Object.keys(state.placement).find(k => state.placement[k] === state.selected);
+        if (prevIdx !== undefined) delete state.placement[prevIdx];
+
+        state.placement[idx] = state.selected;
+        state.selected = null;
+
+        renderGrid(false);
+        refreshTray();
+      });
+
+      let btn = app.querySelector('.btn');
+      if (btn) btn.remove();
+      btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.textContent = 'Проверить';
+      btn.addEventListener('click', () => {
+        stopTimer();
+        checkResult();
+      });
+      app.appendChild(btn);
+
+      runTimer(35, checkResult);
+    }
   </script>
 </body>
 </html>
