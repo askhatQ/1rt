@@ -356,9 +356,18 @@
       const grid = app.querySelector('.grid');
       grid.addEventListener('click', e => {
         const cell = e.target.closest('.cell');
-        if (!cell || !state.selected) return;
+        if (!cell) return;
         const idx = parseInt(cell.dataset.index);
         if (!state.solution.some(s => s.index === idx)) return;
+
+        if (state.placement[idx] && !state.selected) {
+          delete state.placement[idx];
+          renderGrid(false);
+          refreshTray();
+          return;
+        }
+
+        if (!state.selected) return;
 
         const prevIdx = Object.keys(state.placement).find(k => state.placement[k] === state.selected);
         if (prevIdx !== undefined) delete state.placement[prevIdx];
