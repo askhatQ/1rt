@@ -202,6 +202,42 @@
       }
       return a;
     }
+
+    function renderGrid(showSolution) {
+      const app = document.getElementById('app');
+      let grid = app.querySelector('.grid');
+      if (!grid) {
+        grid = document.createElement('div');
+        grid.className = 'grid';
+        app.appendChild(grid);
+      }
+      grid.innerHTML = '';
+
+      for (let i = 0; i < 16; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.index = i;
+
+        if (showSolution) {
+          const entry = state.solution.find(s => s.index === i);
+          if (entry) {
+            cell.textContent = entry.emoji;
+            cell.classList.add('highlighted');
+          }
+        } else {
+          const isSolutionSlot = state.solution.some(s => s.index === i);
+          const placed = state.placement[i];
+          if (placed) {
+            cell.textContent = placed;
+            cell.classList.add('highlighted');
+          } else if (isSolutionSlot) {
+            cell.style.borderStyle = 'dashed';
+          }
+        }
+
+        grid.appendChild(cell);
+      }
+    }
   </script>
 </body>
 </html>
