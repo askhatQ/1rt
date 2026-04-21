@@ -327,37 +327,29 @@
       app.appendChild(tray);
 
       const trayEmojis = shuffle(state.solution.map(s => s.emoji));
+      const trayItems = [];
 
       function refreshTray() {
         const remaining = {};
         trayEmojis.forEach(e => { remaining[e] = (remaining[e] || 0) + 1; });
         Object.values(state.placement).forEach(e => { if (remaining[e]) remaining[e]--; });
-        document.querySelectorAll('.tray-item').forEach(item => {
-          item.classList.remove('selected');
-          const avail = (remaining[item.dataset.emoji] || 0) > 0;
+        trayItems.forEach(({ item, emoji }) => {
+          item.classList.toggle('selected', emoji === state.selected);
+          const avail = (remaining[emoji] || 0) > 0;
           item.style.opacity = avail ? '' : '0.3';
           item.style.pointerEvents = avail ? '' : 'none';
-          if (item.dataset.emoji === state.selected) item.classList.add('selected');
         });
       }
 
-      trayEmojis.forEach(emoji => {
-        const item = document.createElement('div');
-        item.className = 'tray-item';
-        item.textContent = emoji;
-        item.dataset.emoji = emoji;
-        item.addEventListener('click', () => {
-          state.selected = state.selected === emoji ? null : emoji;
-          refreshTray();
-        });
-        tray.appendChild(item);
-      });
+      function selectItem(emoji) {
+        console.log('item selected:', emoji);
+        state.selected = state.selected === emoji ? null : emoji;
+        refreshTray();
+      }
 
-      const grid = app.querySelector('.grid');
-      grid.addEventListener('click', e => {
-        const cell = e.target.closest('.cell');
-        if (!cell) return;
-        const idx = parseInt(cell.dataset.index);
+      function placeItem(idx) {
+        console.log('cell clicked:', idx, 'selected:', state.selected);
+        if (state.phase !== 'place') return;
         if (!state.solution.some(s => s.index === idx)) return;
 
         if (state.placement[idx] && !state.selected) {
@@ -377,6 +369,22 @@
 
         renderGrid(false);
         refreshTray();
+      }
+
+      trayEmojis.forEach(emoji => {
+        const item = document.createElement('div');
+        item.className = 'tray-item';
+        item.textContent = emoji;
+        item.addEventListener('click', () => selectItem(emoji));
+        tray.appendChild(item);
+        trayItems.push({ item, emoji });
+      });
+
+      const grid = app.querySelector('.grid');
+      grid.addEventListener('click', e => {
+        const cell = e.target.closest('.cell');
+        if (!cell) return;
+        placeItem(parseInt(cell.dataset.index));
       });
 
       const btn = document.createElement('button');
