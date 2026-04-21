@@ -238,6 +238,50 @@
         grid.appendChild(cell);
       }
     }
+
+    let _timerInterval = null;
+
+    function stopTimer() {
+      if (_timerInterval !== null) {
+        clearInterval(_timerInterval);
+        _timerInterval = null;
+      }
+    }
+
+    function runTimer(seconds, onEnd) {
+      stopTimer();
+
+      const fill = document.querySelector('.timer-bar__fill');
+      if (!fill) return;
+
+      const start = performance.now();
+      const duration = seconds * 1000;
+
+      fill.style.transition = 'none';
+      fill.style.width = '100%';
+      fill.style.background = 'var(--ok)';
+
+      _timerInterval = setInterval(() => {
+        const elapsed = performance.now() - start;
+        const ratio = Math.max(0, 1 - elapsed / duration);
+        const pct = ratio * 100;
+
+        fill.style.width = pct + '%';
+
+        if (ratio <= 0.2) {
+          fill.style.background = 'var(--fail)';
+        } else if (ratio <= 0.5) {
+          fill.style.background = '#D4852A';
+        } else {
+          fill.style.background = 'var(--ok)';
+        }
+
+        if (ratio <= 0) {
+          stopTimer();
+          onEnd();
+        }
+      }, 100);
+    }
   </script>
 </body>
 </html>
