@@ -357,6 +357,79 @@
 
       runTimer(35, checkResult);
     }
+
+    function checkResult() {
+      stopTimer();
+      state.phase = 'result';
+
+      const total = state.solution.length;
+      let correct = 0;
+      state.solution.forEach(({ index, emoji }) => {
+        if (state.placement[index] === emoji) correct++;
+      });
+
+      const ratio = total > 0 ? correct / total : 0;
+      const earned = Math.round(ratio * (state.level + 1) * 10);
+      state.score += earned;
+
+      const grid = document.querySelector('.grid');
+      if (grid) {
+        grid.querySelectorAll('.cell').forEach(cell => {
+          const idx = parseInt(cell.dataset.index);
+          const solEntry = state.solution.find(s => s.index === idx);
+          if (!solEntry) return;
+          cell.textContent = solEntry.emoji;
+          if (state.placement[idx] === solEntry.emoji) {
+            cell.classList.add('correct');
+          } else {
+            cell.classList.add('wrong');
+            if (state.placement[idx]) {
+              cell.textContent = state.placement[idx] + ' → ' + solEntry.emoji;
+              cell.style.fontSize = '13px';
+            }
+          }
+        });
+      }
+
+      const app = document.getElementById('app');
+      app.querySelector('.tray')?.remove();
+      app.querySelector('.btn')?.remove();
+
+      const stars = ratio === 1 ? '★★★' : ratio >= 0.5 ? '★★☆' : '★☆☆';
+
+      const panel = document.createElement('div');
+      panel.style.cssText = `
+        display:flex; flex-direction:column; align-items:center; gap:12px;
+        background:var(--surface); border:2px solid var(--border);
+        border-radius:14px; padding:20px 24px; width:100%; text-align:center;
+      `;
+      panel.innerHTML = `
+        <div style="font-size:32px; letter-spacing:4px; color:var(--accent)">${stars}</div>
+        <div style="font-size:18px; font-weight:700">
+          ${correct} / ${total} правильно
+        </div>
+        <div style="font-size:14px; color:var(--accent)">+${earned} очков · Всего: ${state.score}</div>
+      `;
+
+      const btnRow = document.createElement('div');
+      btnRow.style.cssText = 'display:flex; gap:12px; margin-top:4px;';
+
+      const btnRepeat = document.createElement('button');
+      btnRepeat.className = 'btn';
+      btnRepeat.style.background = 'var(--border)';
+      btnRepeat.textContent = 'Повторить';
+      btnRepeat.addEventListener('click', restartLevel);
+
+      const btnNext = document.createElement('button');
+      btnNext.className = 'btn';
+      btnNext.textContent = 'Дальше →';
+      btnNext.addEventListener('click', nextLevel);
+
+      btnRow.appendChild(btnRepeat);
+      btnRow.appendChild(btnNext);
+      panel.appendChild(btnRow);
+      app.appendChild(panel);
+    }
   </script>
 </body>
 </html>
