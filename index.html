@@ -162,10 +162,6 @@
       border-radius: 3px;
       transition: width 0.1s linear, background 0.3s;
     }
-
-    .timer-bar__fill.warning {
-      background: var(--fail);
-    }
   </style>
 </head>
 <body>
@@ -191,7 +187,6 @@
       solution: [],
       placement: {},
       selected: null,
-      timer: 0,
     };
 
     function shuffle(arr) {
@@ -264,9 +259,8 @@
       _timerInterval = setInterval(() => {
         const elapsed = performance.now() - start;
         const ratio = Math.max(0, 1 - elapsed / duration);
-        const pct = ratio * 100;
 
-        fill.style.width = pct + '%';
+        fill.style.width = (ratio * 100) + '%';
 
         if (ratio <= 0.2) {
           fill.style.background = 'var(--fail)';
@@ -283,6 +277,37 @@
       }, 100);
     }
 
+    function startLevel() {
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+      state.phase = 'memorize';
+      state.placement = {};
+      state.selected = null;
+
+      const lv = LEVELS[state.level];
+      const indices = shuffle([...Array(16).keys()]).slice(0, lv.items);
+      const emojis = shuffle(EMOJIS).slice(0, lv.items);
+      state.solution = indices.map((index, i) => ({ index, emoji: emojis[i] }));
+
+      const header = document.createElement('div');
+      header.style.cssText = 'display:flex;justify-content:space-between;width:100%;font-size:14px;color:var(--accent)';
+      header.innerHTML = `<span>Уровень ${state.level + 1} / ${LEVELS.length}</span><span>Счёт: ${state.score}</span>`;
+      app.appendChild(header);
+
+      const timerBar = document.createElement('div');
+      timerBar.className = 'timer-bar';
+      timerBar.innerHTML = '<div class="timer-bar__fill"></div>';
+      app.appendChild(timerBar);
+
+      const label = document.createElement('div');
+      label.style.cssText = 'font-size:13px;opacity:0.6';
+      label.textContent = 'Запомни расположение!';
+      app.appendChild(label);
+
+      renderGrid(true);
+      runTimer(lv.time, startPlace);
+    }
+
     function startPlace() {
       state.phase = 'place';
       state.placement = {};
@@ -291,6 +316,9 @@
       renderGrid(false);
 
       const app = document.getElementById('app');
+
+      const label = app.querySelector('div[style*="opacity"]');
+      if (label) label.textContent = 'Расставь улики по местам!';
 
       let tray = app.querySelector('.tray');
       if (tray) tray.remove();
@@ -301,9 +329,8 @@
       const trayEmojis = shuffle(state.solution.map(s => s.emoji));
 
       function refreshTray() {
-        const trayCounts = {};
-        trayEmojis.forEach(e => { trayCounts[e] = (trayCounts[e] || 0) + 1; });
-        const remaining = { ...trayCounts };
+        const remaining = {};
+        trayEmojis.forEach(e => { remaining[e] = (remaining[e] || 0) + 1; });
         Object.values(state.placement).forEach(e => { if (remaining[e]) remaining[e]--; });
         document.querySelectorAll('.tray-item').forEach(item => {
           item.classList.remove('selected');
@@ -329,10 +356,9 @@
       const grid = app.querySelector('.grid');
       grid.addEventListener('click', e => {
         const cell = e.target.closest('.cell');
-        if (!cell) return;
+        if (!cell || !state.selected) return;
         const idx = parseInt(cell.dataset.index);
-        const isSolutionSlot = state.solution.some(s => s.index === idx);
-        if (!isSolutionSlot || !state.selected) return;
+        if (!state.solution.some(s => s.index === idx)) return;
 
         const prevIdx = Object.keys(state.placement).find(k => state.placement[k] === state.selected);
         if (prevIdx !== undefined) delete state.placement[prevIdx];
@@ -344,9 +370,7 @@
         refreshTray();
       });
 
-      let btn = app.querySelector('.btn');
-      if (btn) btn.remove();
-      btn = document.createElement('button');
+      const btn = document.createElement('button');
       btn.className = 'btn';
       btn.textContent = 'Проверить';
       btn.addEventListener('click', () => {
@@ -359,6 +383,7 @@
     }
 
     function checkResult() {
+      if (state.phase === 'result') return;
       stopTimer();
       state.phase = 'result';
 
@@ -379,13 +404,14 @@
           const solEntry = state.solution.find(s => s.index === idx);
           if (!solEntry) return;
           cell.textContent = solEntry.emoji;
+          cell.style.fontSize = '';
           if (state.placement[idx] === solEntry.emoji) {
             cell.classList.add('correct');
           } else {
             cell.classList.add('wrong');
             if (state.placement[idx]) {
-              cell.textContent = state.placement[idx] + ' → ' + solEntry.emoji;
-              cell.style.fontSize = '13px';
+              cell.textContent = state.placement[idx] + '→' + solEntry.emoji;
+              cell.style.fontSize = '12px';
             }
           }
         });
@@ -396,23 +422,22 @@
       app.querySelector('.btn')?.remove();
 
       const stars = ratio === 1 ? '★★★' : ratio >= 0.5 ? '★★☆' : '★☆☆';
+      const isLastLevel = state.level === LEVELS.length - 1;
 
       const panel = document.createElement('div');
       panel.style.cssText = `
-        display:flex; flex-direction:column; align-items:center; gap:12px;
-        background:var(--surface); border:2px solid var(--border);
-        border-radius:14px; padding:20px 24px; width:100%; text-align:center;
+        display:flex;flex-direction:column;align-items:center;gap:12px;
+        background:var(--surface);border:2px solid var(--border);
+        border-radius:14px;padding:20px 24px;width:100%;text-align:center;
       `;
       panel.innerHTML = `
-        <div style="font-size:32px; letter-spacing:4px; color:var(--accent)">${stars}</div>
-        <div style="font-size:18px; font-weight:700">
-          ${correct} / ${total} правильно
-        </div>
-        <div style="font-size:14px; color:var(--accent)">+${earned} очков · Всего: ${state.score}</div>
+        <div style="font-size:32px;letter-spacing:4px;color:var(--accent)">${stars}</div>
+        <div style="font-size:18px;font-weight:700">${correct} / ${total} правильно</div>
+        <div style="font-size:14px;color:var(--accent)">+${earned} очков · Всего: ${state.score}</div>
       `;
 
       const btnRow = document.createElement('div');
-      btnRow.style.cssText = 'display:flex; gap:12px; margin-top:4px;';
+      btnRow.style.cssText = 'display:flex;gap:12px;margin-top:4px;';
 
       const btnRepeat = document.createElement('button');
       btnRepeat.className = 'btn';
@@ -422,8 +447,8 @@
 
       const btnNext = document.createElement('button');
       btnNext.className = 'btn';
-      btnNext.textContent = 'Дальше →';
-      btnNext.addEventListener('click', nextLevel);
+      btnNext.textContent = isLastLevel ? 'В начало' : 'Дальше →';
+      btnNext.addEventListener('click', isLastLevel ? restartAll : nextLevel);
 
       btnRow.appendChild(btnRepeat);
       btnRow.appendChild(btnNext);
@@ -431,42 +456,8 @@
       app.appendChild(panel);
     }
 
-    function startLevel() {
-      const app = document.getElementById('app');
-      app.innerHTML = '';
-      state.phase = 'memorize';
-      state.placement = {};
-      state.selected = null;
-
-      const lv = LEVELS[state.level];
-      const indices = shuffle([...Array(16).keys()]).slice(0, lv.items);
-      const emojis = shuffle(EMOJIS).slice(0, lv.items);
-      state.solution = indices.map((index, i) => ({ index, emoji: emojis[i] }));
-
-      const header = document.createElement('div');
-      header.style.cssText = 'display:flex;justify-content:space-between;width:100%;font-size:14px;color:var(--accent)';
-      header.innerHTML = `<span>Уровень ${state.level + 1}</span><span>Счёт: ${state.score}</span>`;
-      app.appendChild(header);
-
-      const timerBar = document.createElement('div');
-      timerBar.className = 'timer-bar';
-      timerBar.innerHTML = '<div class="timer-bar__fill"></div>';
-      app.appendChild(timerBar);
-
-      const label = document.createElement('div');
-      label.style.cssText = 'font-size:13px;opacity:0.6';
-      label.textContent = 'Запомни расположение!';
-      app.appendChild(label);
-
-      renderGrid(true);
-
-      runTimer(lv.time, startPlace);
-    }
-
     function nextLevel() {
-      if (state.level < LEVELS.length - 1) {
-        state.level++;
-      }
+      state.level = Math.min(state.level + 1, LEVELS.length - 1);
       startLevel();
     }
 
@@ -483,10 +474,10 @@
     }
 
     function showStart() {
+      const hs = parseInt(localStorage.getItem('md_highscore') || '0');
+
       const app = document.getElementById('app');
       app.innerHTML = '';
-
-      const hs = parseInt(localStorage.getItem('md_highscore') || '0');
 
       const screen = document.createElement('div');
       screen.style.cssText = `
