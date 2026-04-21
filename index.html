@@ -227,6 +227,19 @@
             cell.classList.add('highlighted');
           } else if (isSolutionSlot) {
             cell.style.borderStyle = 'dashed';
+            cell.addEventListener('dragover', e => {
+              e.preventDefault();
+              cell.style.borderColor = 'var(--accent)';
+            });
+            cell.addEventListener('dragleave', () => {
+              cell.style.borderColor = '';
+            });
+            cell.addEventListener('drop', e => {
+              e.preventDefault();
+              cell.style.borderColor = '';
+              const emoji = e.dataTransfer.getData('text/plain');
+              if (_onDrop) _onDrop(i, emoji);
+            });
           }
         }
 
@@ -235,6 +248,7 @@
     }
 
     let _timerInterval = null;
+    let _onDrop = null;
 
     function stopTimer() {
       if (_timerInterval !== null) {
@@ -375,10 +389,24 @@
         const item = document.createElement('div');
         item.className = 'tray-item';
         item.textContent = emoji;
+        item.draggable = true;
         item.addEventListener('click', () => selectItem(emoji));
+        item.addEventListener('dragstart', e => {
+          e.dataTransfer.setData('text/plain', emoji);
+          e.dataTransfer.effectAllowed = 'move';
+          item.style.opacity = '0.5';
+        });
+        item.addEventListener('dragend', () => {
+          item.style.opacity = '';
+        });
         tray.appendChild(item);
         trayItems.push({ item, emoji });
       });
+
+      _onDrop = (idx, emoji) => {
+        state.selected = emoji;
+        placeItem(idx);
+      };
 
       const grid = app.querySelector('.grid');
       grid.addEventListener('click', e => {
