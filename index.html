@@ -6,13 +6,14 @@
   <title>Memory Detective</title>
   <style>
     :root {
-      --bg: #0F1117;
-      --surface: #1C1F2B;
-      --border: #2E3347;
-      --text: #E8EAF0;
-      --accent: #378ADD;
-      --ok: #1D9E75;
-      --fail: #D85A30;
+      --bg:      #0a0f2e;
+      --surface: #1a2040;
+      --surface2:#1e2650;
+      --border:  #1e3060;
+      --text:    #e8eaf0;
+      --accent:  #00d4ff;
+      --ok:      #00e676;
+      --fail:    #ff4466;
     }
 
     *, *::before, *::after {
@@ -22,7 +23,13 @@
     }
 
     body {
-      background: var(--bg);
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(circle, rgba(0,212,255,0.10) 1px, transparent 1px),
+        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px, 40px 40px, 40px 40px;
+      background-position: 20px 20px, 0 0, 0 0;
       color: var(--text);
       font-family: system-ui, sans-serif;
       min-height: 100vh;
@@ -38,13 +45,14 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 24px;
+      gap: 20px;
     }
 
+    /* ── Grid ── */
     .grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
+      gap: 8px;
       width: 100%;
     }
 
@@ -52,126 +60,179 @@
       aspect-ratio: 1;
       background: var(--surface);
       border: 2px solid var(--border);
-      border-radius: 10px;
+      border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
+      font-size: 26px;
       cursor: pointer;
       user-select: none;
-      transition: border-color 0.15s, transform 0.1s;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+    }
+
+    .cell::before {
+      content: '🛡️';
+      position: absolute;
+      font-size: 36px;
+      opacity: 0.08;
+      pointer-events: none;
+      user-select: none;
     }
 
     .cell:hover {
       border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(0,212,255,0.35);
       transform: scale(1.04);
+    }
+
+    /* empty solution slot — replaces dashed border */
+    .cell.slot {
+      border-color: var(--accent);
+      box-shadow: 0 0 14px rgba(0,212,255,0.45), inset 0 0 10px rgba(0,212,255,0.07);
+      animation: slot-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes slot-pulse {
+      0%, 100% { box-shadow: 0 0 10px rgba(0,212,255,0.3),  inset 0 0 8px  rgba(0,212,255,0.05); }
+      50%       { box-shadow: 0 0 22px rgba(0,212,255,0.65), inset 0 0 14px rgba(0,212,255,0.12); }
     }
 
     .cell.highlighted {
       border-color: var(--accent);
-      background: color-mix(in srgb, var(--accent) 15%, var(--surface));
+      background: rgba(0,212,255,0.10);
+      box-shadow: 0 0 14px rgba(0,212,255,0.55);
     }
 
     @keyframes flash-correct {
-      0%, 100% { background: color-mix(in srgb, var(--ok)   15%, var(--surface)); }
-      50%      { background: color-mix(in srgb, var(--ok)   55%, var(--surface)); }
+      0%, 100% { background: rgba(0,230,118,0.12); }
+      50%       { background: rgba(0,230,118,0.45); }
     }
     @keyframes flash-wrong {
-      0%, 100% { background: color-mix(in srgb, var(--fail) 15%, var(--surface)); }
-      50%      { background: color-mix(in srgb, var(--fail) 55%, var(--surface)); }
+      0%, 100% { background: rgba(255,68,102,0.12); }
+      50%       { background: rgba(255,68,102,0.45); }
     }
 
     .cell.correct {
       border-color: var(--ok);
-      background: color-mix(in srgb, var(--ok) 15%, var(--surface));
+      background: rgba(0,230,118,0.12);
+      box-shadow: 0 0 14px rgba(0,230,118,0.5);
       animation: flash-correct 300ms ease 2;
     }
 
     .cell.wrong {
       border-color: var(--fail);
-      background: color-mix(in srgb, var(--fail) 15%, var(--surface));
+      background: rgba(255,68,102,0.12);
+      box-shadow: 0 0 14px rgba(255,68,102,0.5);
       animation: flash-wrong 300ms ease 2;
     }
 
+    /* ── Tray ── */
     .tray {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
       justify-content: center;
       width: 100%;
       min-height: 56px;
-      background: var(--surface);
-      border: 2px solid var(--border);
-      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 16px;
       padding: 10px;
     }
 
     .tray-item {
-      width: 44px;
-      height: 44px;
-      background: var(--bg);
+      width: 48px;
+      height: 48px;
+      background: var(--surface2);
       border: 2px solid var(--border);
-      border-radius: 8px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 24px;
       cursor: pointer;
       user-select: none;
-      transition: border-color 0.15s, transform 0.1s;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
     }
 
     .tray-item:hover {
       border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(0,212,255,0.5);
       transform: scale(1.08);
     }
 
     .tray-item.selected {
       border-color: var(--accent);
-      background: color-mix(in srgb, var(--accent) 20%, var(--bg));
+      background: rgba(0,212,255,0.12);
+      box-shadow: 0 0 16px rgba(0,212,255,0.7);
     }
 
+    /* ── Button ── */
     .btn {
-      padding: 12px 32px;
-      background: var(--accent);
+      padding: 14px 40px;
+      background: linear-gradient(135deg, #0055ff, #00d4ff);
       color: #fff;
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
       cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s;
+      box-shadow: 0 0 20px rgba(0,212,255,0.45), 0 0 40px rgba(0,212,255,0.15);
+      transition: box-shadow 0.2s, transform 0.1s, opacity 0.15s;
     }
 
     .btn:hover {
-      opacity: 0.88;
-      transform: scale(1.03);
+      box-shadow: 0 0 30px rgba(0,212,255,0.7), 0 0 60px rgba(0,212,255,0.25);
+      transform: scale(1.04);
     }
 
-    .btn:active {
-      transform: scale(0.97);
-    }
+    .btn:active  { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
 
-    .btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      transform: none;
-    }
-
+    /* ── Timer bar ── */
     .timer-bar {
       width: 100%;
-      height: 6px;
-      background: var(--border);
-      border-radius: 3px;
-      overflow: hidden;
+      height: 8px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 4px;
     }
 
     .timer-bar__fill {
       height: 100%;
       width: 100%;
-      background: var(--accent);
-      border-radius: 3px;
-      transition: width 0.1s linear, background 0.3s;
+      background: var(--ok);
+      border-radius: 4px;
+      transition: width 0.1s linear;
+    }
+
+    /* ── Misc ── */
+    .panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px 28px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(0,0,0,0.4);
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent);
     }
   </style>
 </head>
@@ -187,8 +248,8 @@
     ];
 
     const EMOJIS = [
-      '🔑', '🕯️', '🔍', '🗝️', '📜', '🔎', '💼', '🪄',
-      '🧩', '🪪', '📷', '🧲', '🔭', '🪬', '💡', '🗂️',
+      '🔍', '🗝️', '🕯️', '📷', '🎩', '🧲', '📜', '🔭',
+      '⚗️', '💎', '🦉', '🎭', '🪬', '🧪', '🔐', '📡',
     ];
 
     const state = {
@@ -237,10 +298,10 @@
             cell.textContent = placed;
             cell.classList.add('highlighted');
           } else if (isSolutionSlot) {
-            cell.style.borderStyle = 'dashed';
+            cell.classList.add('slot');
             cell.addEventListener('dragover', e => {
               e.preventDefault();
-              cell.style.borderColor = 'var(--accent)';
+              cell.style.borderColor = '#fff';
             });
             cell.addEventListener('dragleave', () => {
               cell.style.borderColor = '';
@@ -277,9 +338,9 @@
       const start = performance.now();
       const duration = seconds * 1000;
 
-      fill.style.transition = 'none';
       fill.style.width = '100%';
       fill.style.background = 'var(--ok)';
+      fill.style.boxShadow = '0 0 10px var(--ok)';
 
       _timerInterval = setInterval(() => {
         const elapsed = performance.now() - start;
@@ -289,10 +350,13 @@
 
         if (ratio <= 0.2) {
           fill.style.background = 'var(--fail)';
+          fill.style.boxShadow = '0 0 10px var(--fail)';
         } else if (ratio <= 0.5) {
           fill.style.background = '#D4852A';
+          fill.style.boxShadow = '0 0 10px #D4852A';
         } else {
           fill.style.background = 'var(--ok)';
+          fill.style.boxShadow = '0 0 10px var(--ok)';
         }
 
         if (onTick) onTick(Math.ceil(ratio * seconds));
@@ -317,7 +381,7 @@
       state.solution = indices.map((index, i) => ({ index, emoji: emojis[i] }));
 
       const header = document.createElement('div');
-      header.style.cssText = 'display:flex;justify-content:space-between;width:100%;font-size:14px;color:var(--accent)';
+      header.className = 'header-row';
       header.innerHTML = `<span>Уровень ${state.level + 1} / ${LEVELS.length}</span><span>Счёт: ${state.score}</span>`;
       app.appendChild(header);
 
@@ -326,20 +390,23 @@
       timerBar.innerHTML = '<div class="timer-bar__fill"></div>';
       app.appendChild(timerBar);
 
-      const labelRow = document.createElement('div');
-      labelRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;width:100%';
+      const countdownWrap = document.createElement('div');
+      countdownWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;width:100%';
 
-      const label = document.createElement('span');
-      label.style.cssText = 'font-size:13px;opacity:0.6';
+      const label = document.createElement('div');
+      label.style.cssText = 'font-size:11px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.4)';
       label.textContent = 'Запомни!';
 
-      const countdown = document.createElement('span');
-      countdown.style.cssText = 'font-size:22px;font-weight:800;color:var(--accent);min-width:36px;text-align:right';
+      const countdown = document.createElement('div');
+      countdown.style.cssText = `
+        font-size:72px;font-weight:900;line-height:1;
+        color:var(--accent);text-shadow:0 0 24px var(--accent),0 0 48px rgba(0,212,255,0.4);
+      `;
       countdown.textContent = lv.time;
 
-      labelRow.appendChild(label);
-      labelRow.appendChild(countdown);
-      app.appendChild(labelRow);
+      countdownWrap.appendChild(label);
+      countdownWrap.appendChild(countdown);
+      app.appendChild(countdownWrap);
 
       renderGrid(true);
       runTimer(lv.time, readyPause, secs => {
@@ -353,14 +420,11 @@
       app.innerHTML = '';
 
       const screen = document.createElement('div');
-      screen.style.cssText = `
-        display:flex;flex-direction:column;align-items:center;gap:16px;
-        background:var(--surface);border:2px solid var(--border);
-        border-radius:16px;padding:48px 28px;width:100%;text-align:center;
-      `;
+      screen.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:16px;padding:48px 28px;width:100%;text-align:center';
       screen.innerHTML = `
-        <div style="font-size:44px">🕵️</div>
-        <div style="font-size:26px;font-weight:800;color:var(--accent)">Расставляй!</div>
+        <div style="font-size:64px;text-shadow:0 0 24px var(--accent)">🕵️</div>
+        <div style="font-size:32px;font-weight:900;letter-spacing:3px;text-transform:uppercase;
+                    color:var(--accent);text-shadow:0 0 20px var(--accent)">Расставляй!</div>
       `;
       app.appendChild(screen);
       setTimeout(startPlace, 1000);
@@ -374,26 +438,26 @@
       state.selected = null;
 
       const header = document.createElement('div');
-      header.style.cssText = 'display:flex;justify-content:space-between;width:100%;font-size:14px;color:var(--accent)';
+      header.className = 'header-row';
       header.innerHTML = `<span>Уровень ${state.level + 1} / ${LEVELS.length}</span><span>Счёт: ${state.score}</span>`;
       app.appendChild(header);
 
       const timerRow = document.createElement('div');
-      timerRow.style.cssText = 'display:flex;align-items:center;gap:8px;width:100%';
+      timerRow.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%';
       const timerBar = document.createElement('div');
       timerBar.className = 'timer-bar';
       timerBar.style.flex = '1';
       timerBar.innerHTML = '<div class="timer-bar__fill"></div>';
       const secDisplay = document.createElement('span');
-      secDisplay.style.cssText = 'font-size:13px;color:var(--accent);min-width:28px;text-align:right';
+      secDisplay.style.cssText = 'font-size:13px;font-weight:700;color:var(--accent);min-width:32px;text-align:right';
       secDisplay.textContent = '35с';
       timerRow.appendChild(timerBar);
       timerRow.appendChild(secDisplay);
       app.appendChild(timerRow);
 
       const label = document.createElement('div');
-      label.style.cssText = 'font-size:13px;opacity:0.6';
-      label.textContent = 'Расставь улики по местам!';
+      label.style.cssText = 'font-size:11px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.4);width:100%';
+      label.textContent = 'Расставь улики по местам';
       app.appendChild(label);
 
       renderGrid(false);
@@ -412,7 +476,7 @@
         trayItems.forEach(({ item, emoji }) => {
           item.classList.toggle('selected', emoji === state.selected);
           const avail = (remaining[emoji] || 0) > 0;
-          item.style.opacity = avail ? '' : '0.3';
+          item.style.opacity = avail ? '' : '0.25';
           item.style.pointerEvents = avail ? '' : 'none';
         });
       }
@@ -458,7 +522,7 @@
         item.addEventListener('dragstart', e => {
           e.dataTransfer.setData('text/plain', emoji);
           e.dataTransfer.effectAllowed = 'move';
-          item.style.opacity = '0.5';
+          item.style.opacity = '0.4';
         });
         item.addEventListener('dragend', () => { item.style.opacity = ''; });
         tray.appendChild(item);
@@ -517,7 +581,7 @@
             cell.classList.add('wrong');
             if (state.placement[idx]) {
               cell.textContent = state.placement[idx] + '→' + solEntry.emoji;
-              cell.style.fontSize = '12px';
+              cell.style.fontSize = '11px';
             }
           }
         });
@@ -531,23 +595,22 @@
       const isLastLevel = state.level === LEVELS.length - 1;
 
       const panel = document.createElement('div');
-      panel.style.cssText = `
-        display:flex;flex-direction:column;align-items:center;gap:12px;
-        background:var(--surface);border:2px solid var(--border);
-        border-radius:14px;padding:20px 24px;width:100%;text-align:center;
-      `;
+      panel.className = 'panel';
       panel.innerHTML = `
-        <div style="font-size:32px;letter-spacing:4px;color:var(--accent)">${stars}</div>
-        <div style="font-size:18px;font-weight:700">${correct} / ${total} правильно</div>
-        <div style="font-size:14px;color:var(--accent)">+${earned} очков · Всего: ${state.score}</div>
+        <div style="font-size:30px;letter-spacing:6px;color:var(--accent);
+                    text-shadow:0 0 12px var(--accent)">${stars}</div>
+        <div style="font-size:20px;font-weight:800">${correct} / ${total} правильно</div>
+        <div style="font-size:13px;color:var(--accent);letter-spacing:1px">
+          +${earned} ОЧКОВ &nbsp;·&nbsp; ВСЕГО: ${state.score}
+        </div>
       `;
 
       const btnRow = document.createElement('div');
-      btnRow.style.cssText = 'display:flex;gap:12px;margin-top:4px;';
+      btnRow.style.cssText = 'display:flex;gap:10px;margin-top:6px;';
 
       const btnRepeat = document.createElement('button');
       btnRepeat.className = 'btn';
-      btnRepeat.style.background = 'var(--border)';
+      btnRepeat.style.cssText = 'background:var(--surface2);box-shadow:none;border:1px solid var(--border)';
       btnRepeat.textContent = 'Повторить';
       btnRepeat.addEventListener('click', restartLevel);
       btnRow.appendChild(btnRepeat);
@@ -583,23 +646,25 @@
 
     function showStart() {
       const hs = parseInt(localStorage.getItem('md_highscore') || '0');
-
       const app = document.getElementById('app');
       app.innerHTML = '';
 
       const screen = document.createElement('div');
-      screen.style.cssText = `
-        display:flex;flex-direction:column;align-items:center;gap:20px;
-        background:var(--surface);border:2px solid var(--border);
-        border-radius:16px;padding:36px 28px;width:100%;text-align:center;
-      `;
+      screen.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:28px;padding:32px 20px;width:100%;text-align:center';
+
       screen.innerHTML = `
-        <div style="font-size:40px">🔍</div>
-        <div style="font-size:26px;font-weight:800;letter-spacing:1px">Memory Detective</div>
-        <div style="font-size:14px;opacity:0.6;max-width:280px">
+        <div style="font-size:80px;line-height:1;
+                    text-shadow:0 0 20px #00d4ff,0 0 40px #00d4ff,0 0 80px #0055ff">🔍</div>
+        <div>
+          <div style="font-size:48px;font-weight:900;letter-spacing:4px;color:#fff;line-height:1.1;
+                      text-shadow:0 0 24px rgba(0,212,255,0.5)">MEMORY</div>
+          <div style="font-size:48px;font-weight:900;letter-spacing:4px;color:#fff;line-height:1.1;
+                      text-shadow:0 0 24px rgba(0,212,255,0.5)">DETECTIVE</div>
+        </div>
+        <div style="font-size:14px;font-style:italic;color:#4a6080;max-width:260px;line-height:1.6">
           Запомни, где лежат улики, и расставь их по местам
         </div>
-        ${hs > 0 ? `<div style="font-size:13px;color:var(--accent)">Рекорд: ${hs} очков</div>` : ''}
+        ${hs > 0 ? `<div style="font-size:12px;letter-spacing:2px;color:var(--accent)">РЕКОРД: ${hs} ОЧКОВ</div>` : ''}
       `;
 
       const btn = document.createElement('button');
