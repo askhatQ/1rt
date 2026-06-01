@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#f4efe6">
+  <title>Мои задачи</title>
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400;1,600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ============================================================
+       Мои Задачи — Ironveil Games design system
+       Warm parchment / charcoal / crimson + gold accents
+       ============================================================ */
+
+    :root {
+      --paper:        #f4efe6;
+      --bg:           #faf6ee;
+      --bg-2:         #f1ebdf;
+      --surface:      #fffdf8;
+      --surface-2:    #fbf7ef;
+
+      --ink:          #211c15;
+      --ink-2:        #6f6453;
+      --ink-3:        #9a8e79;
+
+      --line:         #e6ddcd;
+      --line-strong:  #d6cab2;
+
+      --crimson:      #b3372a;
+      --crimson-soft: #f2dcd7;
+      --gold:         #9a7212;
+      --gold-bright:  #c4951f;
+      --gold-soft:    #f0e6cc;
+      --ember:        #c0651a;
+      --ember-soft:   #f6e3cf;
+      --sage:         #5d7a3f;
+      --sage-soft:    #e6ecd9;
+
+      --f-display: 'Cinzel Decorative', Georgia, serif;
+      --f-head:    'Cinzel', Georgia, serif;
+      --f-ui:      'Rajdhani', 'Trebuchet MS', sans-serif;
+      --f-body:    'Crimson Pro', Georgia, serif;
+
+      --r-sm: 2px;
+      --r:    4px;
+      --r-md: 6px;
+
+      --shadow-screen: 0 40px 90px rgba(40,30,15,0.28), 0 8px 24px rgba(40,30,15,0.18);
+      --shadow-low:    0 1px 2px rgba(60,45,20,0.06);
+      --shadow-pop:    0 -18px 50px rgba(40,30,15,0.18);
+
+      --ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      overscroll-behavior: none;
+    }
+
+    body {
+      background: radial-gradient(120% 80% at 50% 0%, #efe8da 0%, #e6dcc9 60%, #ddd1ba 100%);
+      font-family: var(--f-ui);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100%;
+      padding: 0;
+    }
+
+    /* ---- Full-screen on mobile, phone-sized on desktop ---- */
+    .screen {
+      position: relative;
+      width: 100%;
+      max-width: 430px;
+      height: 100dvh;
+      background: var(--bg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      isolation: isolate;
+    }
+
+    @media (min-width: 500px) {
+      body { padding: 28px; }
+      .screen {
+        height: 844px;
+        max-height: calc(100vh - 40px);
+        border-radius: 14px;
+        box-shadow: var(--shadow-screen);
+      }
+    }
+
+    .screen::before {
+      content: "";
+      position: absolute; inset: 0;
+      pointer-events: none;
+      background: radial-gradient(140% 30% at 50% 0%, rgba(154,114,18,0.05), transparent 70%);
+      z-index: 50;
+    }
+
+    /* ---------- Status bar ---------- */
+    .statusbar {
+      flex: 0 0 auto;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 22px;
+      padding-top: env(safe-area-inset-top);
+      font-family: var(--f-ui);
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      color: var(--ink);
+      z-index: 30;
+    }
+    .statusbar .sb-icons { display: flex; align-items: center; gap: 6px; }
+    .statusbar svg { display: block; }
+
+    /* ---------- Generic scroll body ---------- */
+    .body {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .body::-webkit-scrollbar { width: 0; height: 0; }
+
+    /* ---------- Header ---------- */
+    .header { padding: 4px 22px 14px; }
+    .header .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--f-ui);
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+    .header .eyebrow .dot { width: 4px; height: 4px; background: var(--gold-bright); transform: rotate(45deg); }
+    .header h1 {
+      margin: 8px 0 0;
+      font-family: var(--f-head);
+      font-weight: 600;
+      font-size: 34px;
+      letter-spacing: 0.02em;
+      line-height: 1.05;
+      color: var(--ink);
+    }
+    .header h1 em { font-style: normal; color: var(--crimson); }
+    .header .subline {
+      margin-top: 6px;
+      font-family: var(--f-body);
+      font-size: 16px;
+      font-style: italic;
+      color: var(--ink-2);
+    }
+
+    .daymeter { margin-top: 16px; display: flex; align-items: center; gap: 12px; }
+    .daymeter .track {
+      position: relative;
+      flex: 1 1 auto;
+      height: 6px;
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      border-radius: var(--r-sm);
+      overflow: hidden;
+    }
+    .daymeter .fill {
+      position: absolute; inset: 0 auto 0 0;
+      background: linear-gradient(90deg, var(--gold), var(--gold-bright));
+      border-radius: var(--r-sm);
+      transition: width 360ms var(--ease);
+    }
+    .daymeter .count {
+      font-family: var(--f-ui);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.04em;
+      color: var(--ink-2);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .daymeter .count b { color: var(--ink); }
+
+    /* ---------- Category rail ---------- */
+    .rail {
+      display: flex;
+      gap: 8px;
+      padding: 2px 22px 14px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .rail::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-sm);
+      font-family: var(--f-ui);
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: all 160ms var(--ease);
+      white-space: nowrap;
+    }
+    .chip .swatch { width: 7px; height: 7px; transform: rotate(45deg); }
+    .chip .num { font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+    .chip:active { border-color: var(--line-strong); }
+    .chip.active { background: var(--ink); border-color: var(--ink); color: #f6efe1; }
+    .chip.active .num { color: rgba(246,239,225,0.6); }
+
+    /* ---------- Section label ---------- */
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 22px 4px;
+    }
+    .section-head .lbl {
+      font-family: var(--f-ui);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+    .section-head .rule {
+      flex: 1 1 auto;
+      height: 1px;
+      background: linear-gradient(90deg, var(--line-strong), transparent);
+    }
+    .section-head .rune { color: var(--gold-bright); font-size: 10px; transform: translateY(-1px); }
+
+    /* ---------- Task row ---------- */
+    .task-wrap {
+      position: relative;
+      margin: 6px 16px;
+      border-radius: var(--r);
+      overflow: hidden;
+      background: var(--crimson);
+    }
+    .task-wrap.to-complete { background: var(--sage); }
+
+    .swipe-actions {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: stretch;
+      justify-content: flex-end;
+      font-family: var(--f-ui);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: #fff;
+    }
+    .swipe-actions .act {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      width: 84px;
+    }
+    .swipe-actions.left { justify-content: flex-start; background: var(--sage); }
+
+    .task {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      padding: 14px 15px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--prio, var(--line-strong));
+      border-radius: var(--r);
+      box-shadow: var(--shadow-low);
+      touch-action: pan-y;
+      cursor: default;
+      transition: box-shadow 160ms var(--ease);
+    }
+    .task.dragging { transition: none; }
+
+    .check {
+      flex: 0 0 auto;
+      width: 22px; height: 22px;
+      margin-top: 1px;
+      border: 1.5px solid var(--line-strong);
+      border-radius: var(--r-sm);
+      background: var(--bg);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: all 160ms var(--ease);
+    }
+    .check svg { opacity: 0; transform: scale(0.5); transition: all 160ms var(--ease); color: #fff; }
+    .check.on { background: var(--gold-bright); border-color: var(--gold-bright); }
+    .check.on svg { opacity: 1; transform: scale(1); }
+
+    .task-main { flex: 1 1 auto; min-width: 0; }
+    .task-title {
+      font-family: var(--f-body);
+      font-size: 18px;
+      font-weight: 500;
+      line-height: 1.3;
+      color: var(--ink);
+      transition: color 200ms var(--ease);
+    }
+    .task.done .task-title {
+      color: var(--ink-3);
+      text-decoration: line-through;
+      text-decoration-color: var(--gold-bright);
+      text-decoration-thickness: 1.5px;
+    }
+
+    .task-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      margin-top: 7px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--f-ui);
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--ink-2);
+    }
+    .tag .swatch { width: 6px; height: 6px; transform: rotate(45deg); }
+    .tag.prio-high { color: var(--crimson); }
+    .tag.due { color: var(--ink-3); }
+    .tag.due.overdue { color: var(--crimson); }
+
+    .subprog {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--f-ui);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--ink-2);
+      font-variant-numeric: tabular-nums;
+    }
+    .subprog .bar { width: 26px; height: 4px; background: var(--bg-2); border:1px solid var(--line); border-radius: 1px; overflow: hidden; }
+    .subprog .bar i { display: block; height: 100%; background: var(--ember); }
+
+    .task .expand {
+      flex: 0 0 auto;
+      width: 24px; height: 24px;
+      display: grid; place-items: center;
+      color: var(--ink-3);
+      cursor: pointer;
+      transition: transform 200ms var(--ease), color 160ms var(--ease);
+    }
+    .task .expand.open { transform: rotate(90deg); }
+
+    .subtasks {
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-top: none;
+      border-left: 3px solid var(--prio, var(--line-strong));
+      border-radius: 0 0 var(--r) var(--r);
+      margin: -6px 16px 6px;
+    }
+    .subtask {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 9px 15px 9px 50px;
+      border-top: 1px dashed var(--line);
+    }
+    .subcheck {
+      width: 16px; height: 16px;
+      border: 1.5px solid var(--line-strong);
+      border-radius: 1px;
+      display: grid; place-items: center;
+      cursor: pointer;
+      color: #fff;
+      flex: 0 0 auto;
+    }
+    .subcheck.on { background: var(--sage); border-color: var(--sage); }
+    .subcheck svg { opacity: 0; }
+    .subcheck.on svg { opacity: 1; }
+    .subtask span { font-family: var(--f-body); font-size: 15px; color: var(--ink-2); }
+    .subtask.done span { color: var(--ink-3); text-decoration: line-through; }
+
+    /* empty state */
+    .empty { text-align: center; padding: 60px 30px; color: var(--ink-3); }
+    .empty .mark { opacity: 0.5; margin-bottom: 14px; }
+    .empty .et { font-family: var(--f-head); font-size: 20px; color: var(--ink-2); letter-spacing: 0.02em; }
+    .empty .es { font-family: var(--f-body); font-style: italic; font-size: 16px; margin-top: 6px; }
+
+    /* ---------- Bottom dock ---------- */
+    .dock {
+      flex: 0 0 auto;
+      position: relative;
+      padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+      background: linear-gradient(0deg, var(--bg) 70%, rgba(250,246,238,0));
+      z-index: 30;
+    }
+    .add-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 15px;
+      background: var(--crimson);
+      color: #fff;
+      border: 1px solid #8f291f;
+      border-radius: var(--r);
+      font-family: var(--f-ui);
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(179,55,42,0.28);
+      transition: all 160ms var(--ease);
+    }
+    .add-btn:active { transform: scale(0.985); }
+
+    /* ---------- Sheet ---------- */
+    .scrim {
+      position: absolute;
+      inset: 0;
+      background: rgba(33,28,21,0.42);
+      z-index: 60;
+      opacity: 0;
+      transition: opacity 250ms var(--ease);
+    }
+    .scrim.show { opacity: 1; }
+
+    .sheet {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      z-index: 61;
+      background: var(--bg);
+      border-top: 1px solid var(--line-strong);
+      border-radius: 10px 10px 14px 14px;
+      box-shadow: var(--shadow-pop);
+      transform: translateY(102%);
+      transition: transform 320ms var(--ease);
+      display: flex;
+      flex-direction: column;
+      max-height: 92%;
+    }
+    .sheet.show { transform: translateY(0); }
+
+    .sheet-grab { width: 38px; height: 4px; background: var(--line-strong); border-radius: 2px; margin: 10px auto 2px; }
+    .sheet-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 20px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .sheet-head .st { font-family: var(--f-head); font-weight: 600; font-size: 20px; letter-spacing: 0.04em; color: var(--ink); }
+    .sheet-head .close {
+      width: 32px; height: 32px;
+      display: grid; place-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--r-sm);
+      background: var(--surface);
+      color: var(--ink-2);
+      cursor: pointer;
+    }
+
+    .sheet-body { padding: 18px 20px 8px; overflow-y: auto; scrollbar-width: none; }
+    .sheet-body::-webkit-scrollbar { display: none; }
+
+    .field { margin-bottom: 20px; }
+    .field > label {
+      display: block;
+      font-family: var(--f-ui);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 9px;
+    }
+
+    .title-input {
+      width: 100%;
+      padding: 12px 0;
+      border: none;
+      border-bottom: 1.5px solid var(--line-strong);
+      background: transparent;
+      font-family: var(--f-body);
+      font-size: 22px;
+      color: var(--ink);
+      outline: none;
+    }
+    .title-input::placeholder { color: var(--ink-3); font-style: italic; }
+    .title-input:focus { border-color: var(--gold-bright); }
+
+    .opt-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .opt {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 14px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-sm);
+      font-family: var(--f-ui);
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: all 140ms var(--ease);
+    }
+    .opt .swatch { width: 8px; height: 8px; transform: rotate(45deg); }
+    .opt.sel { border-color: var(--ink); background: var(--ink); color: #f6efe1; }
+    .opt.sel.prio-high { background: var(--crimson); border-color: var(--crimson); color: #fff; }
+    .opt.sel.prio-med  { background: var(--ember);   border-color: var(--ember);   color: #fff; }
+    .opt.sel.prio-low  { background: var(--sage);    border-color: var(--sage);    color: #fff; }
+
+    .sub-edit { display: flex; flex-direction: column; gap: 8px; }
+    .sub-edit-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-sm);
+    }
+    .sub-edit-row .diamond { width: 6px; height: 6px; background: var(--gold-bright); transform: rotate(45deg); flex: 0 0 auto; }
+    .sub-edit-row span { flex: 1 1 auto; font-family: var(--f-body); font-size: 16px; color: var(--ink); }
+    .sub-edit-row .rm { color: var(--ink-3); cursor: pointer; display: grid; place-items: center; }
+
+    .sub-add {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--r-sm);
+    }
+    .sub-add input {
+      flex: 1 1 auto;
+      border: none; background: transparent; outline: none;
+      font-family: var(--f-body); font-size: 16px; color: var(--ink);
+    }
+    .sub-add input::placeholder { color: var(--ink-3); }
+    .sub-add .plus { color: var(--gold); cursor: pointer; display: grid; place-items: center; }
+
+    .sheet-foot {
+      padding: 14px 20px calc(18px + env(safe-area-inset-bottom));
+      border-top: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+    .save-btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--crimson);
+      color: #fff;
+      border: 1px solid #8f291f;
+      border-radius: var(--r);
+      font-family: var(--f-ui);
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(179,55,42,0.26);
+      transition: all 160ms var(--ease);
+    }
+    .save-btn:active { transform: scale(0.985); }
+    .save-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+    @keyframes rowin {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .task-wrap.enter { animation: rowin 280ms var(--ease); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/1rt/sw.js', { scope: '/1rt/' });
+    }
+  </script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect, useCallback, useMemo } = React;
+
+    /* ── Icons ── */
+    const Ico = {
+      check: (p) => (
+        <svg width={p.s||14} height={p.s||14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 6"/></svg>
+      ),
+      plus: (p) => (
+        <svg width={p.s||16} height={p.s||16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      ),
+      chevR: (p) => (
+        <svg width={p.s||16} height={p.s||16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      ),
+      close: (p) => (
+        <svg width={p.s||16} height={p.s||16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      ),
+      trash: (p) => (
+        <svg width={p.s||18} height={p.s||18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+      ),
+      flame: (p) => (
+        <svg width={p.s||18} height={p.s||18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3c1 3 4 4 4 8a4 4 0 11-8 0c0-2 1-3 1-4 1 1 2 1 3 0 0-1.5-1-3 0-4z"/></svg>
+      ),
+      clock: (p) => (
+        <svg width={p.s||12} height={p.s||12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>
+      ),
+      scroll: (p) => (
+        <svg width={p.s||48} height={p.s||48} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 12h32v34a6 6 0 01-6 6H16a6 6 0 01-6-6V18a6 6 0 016-6z"/><path d="M48 12a6 6 0 016 6v0a4 4 0 01-4 4h-6"/><path d="M20 24h20M20 32h20M20 40h12"/></svg>
+      ),
+    };
+
+    const PRIOS = {
+      high: { key: 'high', label: 'Высокий', color: 'var(--crimson)' },
+      med:  { key: 'med',  label: 'Средний', color: 'var(--ember)' },
+      low:  { key: 'low',  label: 'Низкий',  color: 'var(--sage)' },
+    };
+
+    function fmtDue(due) {
+      if (!due) return null;
+      const map = { today: 'Сегодня', tomorrow: 'Завтра', overdue: 'Просрочено', week: 'На неделе' };
+      return map[due] || due;
+    }
+
+    /* ── TaskRow ── */
+    function TaskRow({ task, cat, onToggle, onDelete, onToggleSub, isNew }) {
+      const [dx, setDx] = useState(0);
+      const [open, setOpen] = useState(false);
+      const [dragging, setDragging] = useState(false);
+      const start = useRef(null);
+      const moved = useRef(false);
+
+      const REVEAL = 84;
+      const TRIGGER = 150;
+
+      const onDown = (e) => {
+        start.current = { x: e.clientX, y: e.clientY, base: dx };
+        moved.current = false;
+        setDragging(true);
+        e.currentTarget.setPointerCapture?.(e.pointerId);
+      };
+      const onMove = (e) => {
+        if (start.current == null) return;
+        const ddx = e.clientX - start.current.x;
+        const ddy = e.clientY - start.current.y;
+        if (!moved.current && Math.abs(ddx) < Math.abs(ddy)) {
+          start.current = null; setDragging(false); return;
+        }
+        if (Math.abs(ddx) > 4) moved.current = true;
+        let next = start.current.base + ddx;
+        next = Math.max(-160, Math.min(160, next));
+        setDx(next);
+      };
+      const onUp = () => {
+        if (start.current == null) return;
+        start.current = null;
+        setDragging(false);
+        if (dx <= -TRIGGER) { onDelete(task.id); return; }
+        if (dx >= TRIGGER) { onToggle(task.id); setDx(0); return; }
+        if (dx < -REVEAL/2) setDx(-REVEAL);
+        else if (dx > REVEAL/2) setDx(REVEAL);
+        else setDx(0);
+      };
+
+      const done = task.done;
+      const subDone = task.subtasks.filter(s => s.done).length;
+      const subTotal = task.subtasks.length;
+      const prio = PRIOS[task.priority];
+
+      const handleRowClick = () => {
+        if (moved.current) { moved.current = false; return; }
+        if (Math.abs(dx) > 2) { setDx(0); return; }
+      };
+
+      const wrapClass = 'task-wrap' + (isNew ? ' enter' : '') + (dx > 8 ? ' to-complete' : '');
+
+      return (
+        <React.Fragment>
+          <div className={wrapClass}>
+            <div className={'swipe-actions ' + (dx > 0 ? 'left' : '')}>
+              {dx > 0 ? (
+                <div className="act" style={{ marginRight: 'auto' }}><Ico.check s={18}/>{done ? 'Вернуть' : 'Готово'}</div>
+              ) : (
+                <div className="act"><Ico.trash s={18}/>Удалить</div>
+              )}
+            </div>
+
+            <div
+              className={'task' + (done ? ' done' : '') + (dragging ? ' dragging' : '')}
+              style={{ '--prio': prio.color, transform: `translateX(${dx}px)`, transition: dragging ? 'none' : 'transform 260ms var(--ease)' }}
+              onPointerDown={onDown}
+              onPointerMove={onMove}
+              onPointerUp={onUp}
+              onPointerCancel={onUp}
+              onClick={handleRowClick}
+            >
+              <div className={'check' + (done ? ' on' : '')} onClick={(e) => { e.stopPropagation(); onToggle(task.id); }}>
+                <Ico.check s={14}/>
+              </div>
+
+              <div className="task-main">
+                <div className="task-title">{task.title}</div>
+                <div className="task-meta">
+                  {cat && (
+                    <span className="tag"><span className="swatch" style={{ background: cat.color }}></span>{cat.name}</span>
+                  )}
+                  {task.priority === 'high' && !done && (
+                    <span className="tag prio-high"><Ico.flame s={12}/>Высокий</span>
+                  )}
+                  {task.due && (
+                    <span className={'tag due' + (task.due === 'overdue' ? ' overdue' : '')}><Ico.clock s={12}/>{fmtDue(task.due)}</span>
+                  )}
+                  {subTotal > 0 && (
+                    <span className="subprog">
+                      <span className="bar"><i style={{ width: (subTotal ? (subDone/subTotal*100) : 0) + '%' }}></i></span>
+                      {subDone}/{subTotal}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {subTotal > 0 && (
+                <div className={'expand' + (open ? ' open' : '')} onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}>
+                  <Ico.chevR s={16}/>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {subTotal > 0 && (
+            <div className="subtasks" style={{ '--prio': prio.color, maxHeight: open ? (subTotal * 44 + 4) + 'px' : '0px', transition: 'max-height 260ms var(--ease)' }}>
+              {task.subtasks.map(s => (
+                <div className={'subtask' + (s.done ? ' done' : '')} key={s.id} onClick={() => onToggleSub(task.id, s.id)}>
+                  <div className={'subcheck' + (s.done ? ' on' : '')}><Ico.check s={11}/></div>
+                  <span>{s.title}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </React.Fragment>
+      );
+    }
+
+    /* ── AddSheet ── */
+    function AddSheet({ open, categories, onClose, onSave }) {
+      const [title, setTitle] = useState('');
+      const [cat, setCat] = useState(categories[0]?.id);
+      const [prio, setPrio] = useState('med');
+      const [due, setDue] = useState(null);
+      const [subs, setSubs] = useState([]);
+      const [subText, setSubText] = useState('');
+      const titleRef = useRef(null);
+
+      useEffect(() => {
+        if (open) {
+          setTitle(''); setCat(categories[0]?.id); setPrio('med'); setDue(null); setSubs([]); setSubText('');
+          const t = setTimeout(() => titleRef.current?.focus(), 360);
+          return () => clearTimeout(t);
+        }
+      }, [open]);
+
+      const addSub = () => {
+        const v = subText.trim();
+        if (!v) return;
+        setSubs(s => [...s, { id: 's' + Date.now() + Math.random(), title: v, done: false }]);
+        setSubText('');
+      };
+      const rmSub = (id) => setSubs(s => s.filter(x => x.id !== id));
+
+      const save = () => {
+        if (!title.trim()) return;
+        onSave({ title: title.trim(), category: cat, priority: prio, due, subtasks: subs });
+      };
+
+      const dues = [
+        { k: 'today', label: 'Сегодня' },
+        { k: 'tomorrow', label: 'Завтра' },
+        { k: 'week', label: 'На неделе' },
+      ];
+
+      return (
+        <React.Fragment>
+          <div className={'scrim' + (open ? ' show' : '')} onClick={onClose} style={{ pointerEvents: open ? 'auto' : 'none' }}></div>
+          <div className={'sheet' + (open ? ' show' : '')} role="dialog" aria-modal="true">
+            <div className="sheet-grab"></div>
+            <div className="sheet-head">
+              <div className="st">Новая задача</div>
+              <div className="close" onClick={onClose}><Ico.close s={16}/></div>
+            </div>
+
+            <div className="sheet-body">
+              <div className="field">
+                <label>Задача</label>
+                <input
+                  ref={titleRef}
+                  className="title-input"
+                  placeholder="Что нужно сделать…"
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') save(); }}
+                />
+              </div>
+
+              <div className="field">
+                <label>Проект</label>
+                <div className="opt-row">
+                  {categories.map(c => (
+                    <div key={c.id} className={'opt' + (cat === c.id ? ' sel' : '')} onClick={() => setCat(c.id)}>
+                      <span className="swatch" style={{ background: cat === c.id ? '#f6efe1' : c.color }}></span>{c.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="field">
+                <label>Приоритет</label>
+                <div className="opt-row">
+                  {['high','med','low'].map(p => (
+                    <div key={p} className={'opt prio-' + p + (prio === p ? ' sel' : '')} onClick={() => setPrio(p)}>
+                      <span className="swatch" style={{ background: prio === p ? '#fff' : PRIOS[p].color }}></span>{PRIOS[p].label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="field">
+                <label>Срок</label>
+                <div className="opt-row">
+                  {dues.map(d => (
+                    <div key={d.k} className={'opt' + (due === d.k ? ' sel' : '')} onClick={() => setDue(due === d.k ? null : d.k)}>
+                      {d.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="field">
+                <label>Подзадачи</label>
+                <div className="sub-edit">
+                  {subs.map(s => (
+                    <div className="sub-edit-row" key={s.id}>
+                      <span className="diamond"></span>
+                      <span>{s.title}</span>
+                      <div className="rm" onClick={() => rmSub(s.id)}><Ico.close s={15}/></div>
+                    </div>
+                  ))}
+                  <div className="sub-add">
+                    <input
+                      placeholder="Добавить пункт…"
+                      value={subText}
+                      onChange={e => setSubText(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSub(); } }}
+                    />
+                    <div className="plus" onClick={addSub}><Ico.plus s={18}/></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sheet-foot">
+              <button className="save-btn" onClick={save} disabled={!title.trim()}>Создать задачу</button>
+            </div>
+          </div>
+        </React.Fragment>
+      );
+    }
+
+    /* ── App data ── */
+    const CATEGORIES = [
+      { id: 'all',      name: 'Все',     color: 'var(--gold-bright)' },
+      { id: 'work',     name: 'Работа',  color: 'var(--crimson)' },
+      { id: 'personal', name: 'Личное',  color: 'var(--ember)' },
+      { id: 'home',     name: 'Дом',     color: 'var(--sage)' },
+      { id: 'study',    name: 'Учёба',   color: '#4a7ab5' },
+    ];
+    const PICKABLE = CATEGORIES.filter(c => c.id !== 'all');
+
+    const SEED = [
+      { id: 't1', title: 'Подготовить отчёт за квартал', category: 'work', priority: 'high', due: 'today', done: false,
+        subtasks: [ {id:'a1',title:'Собрать данные',done:true}, {id:'a2',title:'Свести таблицы',done:false}, {id:'a3',title:'Проверить с командой',done:false} ] },
+      { id: 't2', title: 'Записаться к врачу', category: 'personal', priority: 'med', due: 'tomorrow', done: false, subtasks: [] },
+      { id: 't3', title: 'Полить растения', category: 'home', priority: 'low', due: null, done: false, subtasks: [] },
+      { id: 't4', title: 'Дочитать главу по дизайну', category: 'study', priority: 'med', due: 'week', done: false,
+        subtasks: [ {id:'b1',title:'Раздел про сетки',done:true}, {id:'b2',title:'Конспект',done:false} ] },
+      { id: 't5', title: 'Ответить на письма', category: 'work', priority: 'high', due: 'overdue', done: false, subtasks: [] },
+      { id: 't6', title: 'Купить продукты на неделю', category: 'home', priority: 'med', due: null, done: true, subtasks: [] },
+      { id: 't7', title: 'Утренняя пробежка', category: 'personal', priority: 'low', due: null, done: true, subtasks: [] },
+    ];
+
+    const PRIO_ORDER = { high: 0, med: 1, low: 2 };
+
+    function loadTasks() {
+      try {
+        const saved = localStorage.getItem('tasks_v1');
+        return saved ? JSON.parse(saved) : SEED;
+      } catch { return SEED; }
+    }
+
+    /* ── App ── */
+    function App() {
+      const [tasks, setTasks] = useState(loadTasks);
+      const [filter, setFilter] = useState('all');
+      const [sheet, setSheet] = useState(false);
+      const [newId, setNewId] = useState(null);
+
+      useEffect(() => {
+        try { localStorage.setItem('tasks_v1', JSON.stringify(tasks)); } catch {}
+      }, [tasks]);
+
+      const counts = useMemo(() => {
+        const c = {};
+        CATEGORIES.forEach(cat => c[cat.id] = 0);
+        tasks.forEach(t => { if (!t.done) { c.all++; c[t.category] = (c[t.category]||0) + 1; } });
+        return c;
+      }, [tasks]);
+
+      const filtered = useMemo(() =>
+        tasks.filter(t => filter === 'all' || t.category === filter)
+      , [tasks, filter]);
+
+      const active = filtered.filter(t => !t.done)
+        .sort((a,b) => PRIO_ORDER[a.priority] - PRIO_ORDER[b.priority]);
+      const done = filtered.filter(t => t.done);
+
+      const totalToday = filtered.length;
+      const doneCount = done.length;
+      const pct = totalToday ? Math.round(doneCount / totalToday * 100) : 0;
+
+      const catOf = (id) => CATEGORIES.find(c => c.id === id);
+
+      const toggle    = (id) => setTasks(ts => ts.map(t => t.id === id ? { ...t, done: !t.done } : t));
+      const remove    = (id) => setTasks(ts => ts.filter(t => t.id !== id));
+      const toggleSub = (tid, sid) => setTasks(ts => ts.map(t => t.id === tid
+        ? { ...t, subtasks: t.subtasks.map(s => s.id === sid ? { ...s, done: !s.done } : s) } : t));
+
+      const save = (data) => {
+        const id = 't' + Date.now();
+        setTasks(ts => [{ id, done: false, ...data }, ...ts]);
+        setNewId(id);
+        setSheet(false);
+        setTimeout(() => setNewId(null), 400);
+      };
+
+      const greeting = (() => {
+        const h = new Date().getHours();
+        if (h < 6) return 'Доброй ночи';
+        if (h < 12) return 'Доброе утро';
+        if (h < 18) return 'Добрый день';
+        return 'Добрый вечер';
+      })();
+
+      const now = new Date();
+      const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+
+      return (
+        <div className="screen">
+          <div className="statusbar">
+            <span>{timeStr}</span>
+            <div className="sb-icons">
+              <svg width="17" height="11" viewBox="0 0 17 11" fill="none"><rect x="0" y="6" width="3" height="5" rx="0.5" fill="currentColor"/><rect x="4.5" y="4" width="3" height="7" rx="0.5" fill="currentColor"/><rect x="9" y="2" width="3" height="9" rx="0.5" fill="currentColor"/><rect x="13.5" y="0" width="3" height="11" rx="0.5" fill="currentColor"/></svg>
+              <svg width="16" height="11" viewBox="0 0 16 11" fill="none"><path d="M8 2.5C10 2.5 11.8 3.3 13 4.6L14.2 3.3C12.7 1.7 10.4 0.7 8 0.7S3.3 1.7 1.8 3.3L3 4.6C4.2 3.3 6 2.5 8 2.5Z" fill="currentColor"/><path d="M8 5.5C9 5.5 9.9 5.9 10.5 6.6L8 9.3 5.5 6.6C6.1 5.9 7 5.5 8 5.5Z" fill="currentColor"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.8" width="21" height="10.4" rx="2.5" stroke="currentColor" strokeOpacity="0.5"/><rect x="2" y="2.3" width="17" height="7.4" rx="1.3" fill="currentColor"/><rect x="22.5" y="4" width="1.6" height="4" rx="0.8" fill="currentColor" fillOpacity="0.5"/></svg>
+            </div>
+          </div>
+
+          <div className="body">
+            <div className="header">
+              <div className="eyebrow"><span className="dot"></span>{greeting}</div>
+              <h1>Мои <em>задачи</em></h1>
+              <div className="subline">
+                {doneCount === totalToday && totalToday > 0
+                  ? 'Всё выполнено. Достойно.'
+                  : `Осталось ${totalToday - doneCount} из ${totalToday}.`}
+              </div>
+              <div className="daymeter">
+                <div className="track"><div className="fill" style={{ width: pct + '%' }}></div></div>
+                <div className="count"><b>{doneCount}</b>/{totalToday}</div>
+              </div>
+            </div>
+
+            <div className="rail">
+              {CATEGORIES.map(c => (
+                <div key={c.id} className={'chip' + (filter === c.id ? ' active' : '')} onClick={() => setFilter(c.id)}>
+                  <span className="swatch" style={{ background: c.color }}></span>
+                  {c.name}
+                  {counts[c.id] > 0 && <span className="num">{counts[c.id]}</span>}
+                </div>
+              ))}
+            </div>
+
+            {active.length > 0 && (
+              <div className="section-head">
+                <span className="lbl">Активные</span>
+                <span className="rune">◆</span>
+                <span className="rule"></span>
+              </div>
+            )}
+            {active.map(t => (
+              <TaskRow key={t.id} task={t} cat={catOf(t.category)} isNew={t.id === newId}
+                onToggle={toggle} onDelete={remove} onToggleSub={toggleSub} />
+            ))}
+
+            {active.length === 0 && (
+              <div className="empty">
+                <div className="mark"><Ico.scroll s={52}/></div>
+                <div className="et">Свиток пуст</div>
+                <div className="es">Здесь нет активных задач. Создайте новую.</div>
+              </div>
+            )}
+
+            {done.length > 0 && (
+              <React.Fragment>
+                <div className="section-head" style={{ marginTop: 14 }}>
+                  <span className="lbl">Завершено · {done.length}</span>
+                  <span className="rune">◆</span>
+                  <span className="rule"></span>
+                </div>
+                {done.map(t => (
+                  <TaskRow key={t.id} task={t} cat={catOf(t.category)}
+                    onToggle={toggle} onDelete={remove} onToggleSub={toggleSub} />
+                ))}
+              </React.Fragment>
+            )}
+
+            <div style={{ height: 8 }}></div>
+          </div>
+
+          <div className="dock">
+            <button className="add-btn" onClick={() => setSheet(true)}>
+              <Ico.plus s={18}/> Новая задача
+            </button>
+          </div>
+
+          <AddSheet open={sheet} categories={PICKABLE} onClose={() => setSheet(false)} onSave={save} />
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
