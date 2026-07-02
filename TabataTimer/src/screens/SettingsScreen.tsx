@@ -17,6 +17,8 @@ import { StepperCard } from '../components/StepperCard';
 import { CtaButton } from '../components/CtaButton';
 import { STEPPER_CONFIGS } from '../utils/steppers';
 import { totalDurationSec, formatDuration } from '../utils/session';
+import { totalPhaseChangeEvents } from '../state/tabataStateMachine';
+import { MAX_SCHEDULED_NOTIFICATIONS } from '../state/phaseNotifications';
 import { colors, fonts, spacing, layout, radii } from '../theme/tokens';
 
 const NAME_MAX_LENGTH = 30;
@@ -45,6 +47,8 @@ export function SettingsScreen({ navigation, route }: Props) {
   const canStart = trimmedName.length > 0;
 
   const total = useMemo(() => totalDurationSec(draft), [draft]);
+  const phaseChangeEvents = useMemo(() => totalPhaseChangeEvents(draft), [draft.rounds, draft.cycles]);
+  const exceedsNotificationCap = phaseChangeEvents > MAX_SCHEDULED_NOTIFICATIONS;
 
   const setField = <K extends keyof SessionDraft>(field: K, value: SessionDraft[K]) => {
     setDraft((d) => ({ ...d, [field]: value }));
@@ -108,6 +112,18 @@ export function SettingsScreen({ navigation, route }: Props) {
             <Text style={styles.totalLabel}>Общая длительность</Text>
             <Text style={styles.totalValue}>{formatDuration(total)}</Text>
           </View>
+
+          {exceedsNotificationCap && (
+            <View style={styles.warningCard} accessibilityRole="text">
+              <Text style={styles.warningText}>
+                В этой сессии {phaseChangeEvents} смен фазы — это больше, чем помещается в
+                разовое расписание фоновых уведомлений ({MAX_SCHEDULED_NOTIFICATIONS}). Пока
+                приложение открыто, уведомления будут пополняться автоматически, но если
+                свернуть приложение и не открывать его, уведомления придут только для первых
+                ~{MAX_SCHEDULED_NOTIFICATIONS} смен фазы, а дальше — молча.
+              </Text>
+            </View>
+          )}
         </ScrollView>
 
         <View style={styles.footer}>
@@ -200,6 +216,22 @@ const styles = StyleSheet.create({
     color: colors.orange,
     fontFamily: fonts.bold,
     fontSize: 16,
+  },
+  warningCard: {
+    width: layout.cardWidth,
+    borderRadius: radii.card,
+    borderWidth: 1,
+    borderColor: colors.orange,
+    backgroundColor: colors.cardSelected,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginTop: 4,
+  },
+  warningText: {
+    color: colors.white,
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    lineHeight: 18,
   },
   footer: {
     paddingHorizontal: spacing.screenHorizontal,

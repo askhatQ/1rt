@@ -8,6 +8,13 @@ import { cancelScheduledPhaseNotifications, scheduleUpcomingPhaseNotifications }
 
 const TICK_MS = 200;
 const KEEP_AWAKE_TAG = 'tabata-timer';
+// Once this many phase transitions have naturally elapsed since the last
+// (re)schedule, top up the notification queue while we're still running.
+// Only helps while the JS thread is alive to notice (foreground, or a
+// backgrounded-then-resumed catch-up) — see phaseNotifications.ts for the
+// hard cap this is topping up against and why it can't cover an entire
+// long session scheduled purely up front.
+const NOTIFICATION_TOPUP_THRESHOLD = 32;
 
 function hapticForPhase(phase: TimerPhase) {
   if (phase === 'work') {
@@ -44,6 +51,9 @@ export function useTabataTimer(session: TabataSession): TabataTimerApi {
   stepRef.current = step;
   const isRunningRef = useRef(isRunning);
   isRunningRef.current = isRunning;
+  // Counts phase transitions that have naturally elapsed since the last full
+  // (re)schedule of notifications, so we know when to top the queue back up.
+  const transitionsSinceScheduleRef = useRef(0);
 
   const beginPhase = useCallback(
     (next: Step, running: boolean) => {
@@ -64,6 +74,7 @@ export function useTabataTimer(session: TabataSession): TabataTimerApi {
   const advance = useCallback(
     (baseTimestamp?: number) => {
       let result: Step | null = null;
+      let transitions = 0;
       setStep((prevStep) => {
         let cur = prevStep;
         // Natural expiry (tick/foreground) chains from the scheduled end-time so
@@ -77,6 +88,7 @@ export function useTabataTimer(session: TabataSession): TabataTimerApi {
           const next = nextStep(cur, session);
           const durMs = durationFor(next.phase, session) * 1000;
           cur = next;
+          transitions += 1;
           hapticForPhase(next.phase);
           if (next.phase === 'finished') {
             phaseEndAtRef.current = null;
@@ -101,7 +113,22 @@ export function useTabataTimer(session: TabataSession): TabataTimerApi {
         result = cur;
         return cur;
       });
-      return result!;
+      return { step: result!, transitions };
+    },
+    [session]
+  );
+
+  // Tops up the notification queue if enough phase transitions have gone by
+  // since the last full (re)schedule, so a long-running-in-foreground session
+  // doesn't go silent once its initial 48-notification batch is consumed.
+  const maybeTopUpNotifications = useCallback(
+    (result: Step, transitions: number) => {
+      if (result.phase === 'finished' || !isRunningRef.current) return;
+      transitionsSinceScheduleRef.current += transitions;
+      if (transitionsSinceScheduleRef.current < NOTIFICATION_TOPUP_THRESHOLD) return;
+      transitionsSinceScheduleRef.current = 0;
+      const remainingMs = phaseEndAtRef.current != null ? phaseEndAtRef.current - Date.now() : 0;
+      scheduleUpcomingPhaseNotifications(result, remainingMs, session);
     },
     [session]
   );
@@ -113,24 +140,29 @@ export function useTabataTimer(session: TabataSession): TabataTimerApi {
       if (endAt == null) return;
       const remainingMs = endAt - Date.now();
       if (remainingMs <= 0) {
-        advance();
+        const { step: result, transitions } = advance();
+        maybeTopUpNotifications(result, transitions);
       } else {
         setRemainingSec(remainingMs / 1000);
       }
     }, TICK_MS);
     return () => clearInterval(id);
-  }, [isRunning, advance]);
+  }, [isRunning, advance, maybeTopUpNotifications]);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active' && isRunning && phaseEndAtRef.current != null) {
         const remainingMs = phaseEndAtRef.current - Date.now();
-        if (remainingMs <= 0) advance();
-        else setRemainingSec(remainingMs / 1000);
+        if (remainingMs <= 0) {
+          const { step: result, transitions } = advance();
+          maybeTopUpNotifications(result, transitions);
+        } else {
+          setRemainingSec(remainingMs / 1000);
+        }
       }
     });
     return () => sub.remove();
-  }, [isRunning, advance]);
+  }, [isRunning, advance, maybeTopUpNotifications]);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -159,6 +191,7 @@ export function useTabataTimer(session: TabataSession): TabataTimerApi {
       // (re)schedule the full upcoming notification queue from here.
       if (stepRef.current.phase !== 'finished') {
         phaseEndAtRef.current = Date.now() + pausedRemainingMsRef.current;
+        transitionsSinceScheduleRef.current = 0;
         scheduleUpcomingPhaseNotifications(stepRef.current, pausedRemainingMsRef.current, session);
       }
       return true;
@@ -167,8 +200,9 @@ export function useTabataTimer(session: TabataSession): TabataTimerApi {
 
   const skip = useCallback(() => {
     if (stepRef.current.phase === 'finished') return;
-    const result = advance(Date.now());
+    const { step: result } = advance(Date.now());
     if (!isRunningRef.current) return;
+    transitionsSinceScheduleRef.current = 0;
     if (result.phase === 'finished') {
       cancelScheduledPhaseNotifications();
     } else {
@@ -180,6 +214,7 @@ export function useTabataTimer(session: TabataSession): TabataTimerApi {
   const reset = useCallback(() => {
     setIsRunning(false);
     beginPhase({ phase: 'work', round: 1, cycle: 1 }, false);
+    transitionsSinceScheduleRef.current = 0;
     cancelScheduledPhaseNotifications();
   }, [beginPhase]);
 

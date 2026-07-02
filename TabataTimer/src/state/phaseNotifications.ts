@@ -6,10 +6,30 @@ import { type Step, durationFor, nextStep } from './tabataStateMachine';
 
 const ANDROID_CHANNEL_ID = 'tabata-phase-changes';
 
-// iOS caps pending local notifications app-wide at 64. We stay well under
-// that so a single long Tabata session doesn't starve any other scheduled
-// notification the app might have.
-const MAX_SCHEDULED_NOTIFICATIONS = 48;
+/**
+ * Cap on how many local notifications we schedule in one batch.
+ *
+ * iOS is widely reported (community docs, historically Apple's own
+ * UILocalNotification-era guidance) to cap an app at 64 pending local
+ * notifications app-wide, dropping the rest silently. That figure is NOT
+ * confirmed against current UNUserNotificationCenter documentation — a
+ * direct check of the live `add(_:withCompletionHandler:)`,
+ * `UNUserNotificationCenter`, `UNNotificationRequest`, and
+ * `getPendingNotificationRequests` pages found no explicit numeric limit
+ * stated anywhere. So treat 64 as an unverified-but-plausible legacy figure,
+ * and this 48 as "comfortably under a number we can't currently confirm",
+ * not as a proven-safe margin.
+ *
+ * This only bounds a single scheduling *batch* — see useTabataTimer's
+ * `maybeTopUpNotifications`, which reschedules a fresh batch from the
+ * current phase once ~32 transitions have gone by while running, so
+ * foreground-alive long sessions keep getting notifications past the first
+ * 48 events. It does NOT help a session that is backgrounded continuously
+ * for its entire remaining duration once the batch runs out — nothing can
+ * run JS to top it up in that case, which is an inherent limit of
+ * scheduling-ahead local notifications, not a bug in this scheduler.
+ */
+export const MAX_SCHEDULED_NOTIFICATIONS = 48;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

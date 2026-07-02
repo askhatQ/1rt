@@ -73,15 +73,45 @@ static Figma mock can't encode behavior. Decisions made here:
   multiple phases if the app was backgrounded for a long time.
 - **Background notifications**: implemented via `expo-notifications`
   (`src/state/phaseNotifications.ts`). When the timer starts or resumes, every
-  upcoming phase change from "now" through `finished` is computed once and
-  scheduled up front as absolute-timestamp local notifications (`type: DATE`)
-  — not a background JS timer, so delivery doesn't depend on the JS thread
-  being alive. SKIP/RESET/PAUSE cancel the outstanding schedule; SKIP and
-  RESUME recompute and reschedule from the new state. Capped at 48 scheduled
-  notifications (iOS hard-limits an app to 64 pending local notifications
-  app-wide; long high-round-count sessions will only get notifications for
-  their next ~48 phase changes, not the entire session — a real OS
-  constraint, not an oversight).
+  upcoming phase change from "now" through `finished` is computed and
+  scheduled as absolute-timestamp local notifications (`type: DATE`) — not a
+  background JS timer, so delivery doesn't depend on the JS thread being
+  alive. SKIP/RESET/PAUSE cancel the outstanding schedule; SKIP and RESUME
+  recompute and reschedule from the new state.
+
+  **This has a real, user-facing gap, not just a documented scope cut: each
+  scheduling batch is capped at `MAX_SCHEDULED_NOTIFICATIONS = 48`
+  (`src/state/phaseNotifications.ts`).** A session's total phase-change count
+  is `cycles × (rounds × 2 − 1) + (cycles − 1)`
+  (`totalPhaseChangeEvents` in `tabataStateMachine.ts`) — with the spec's own
+  stepper bounds (rounds up to 30, cycles up to 10) that reaches **599**, and
+  even modest configs like 20 rounds × 3 cycles reach **119**, both well past
+  48. Without any mitigation, a long session run start-to-finish without ever
+  pausing would go silent after the 48th phase change and stay silent for
+  the rest of the session — that's a real bug, confirmed by brute-force
+  simulating the actual `nextStep` transition function (copied verbatim)
+  against the closed-form formula for several rounds/cycles pairs, including
+  the 30×10 boundary; all matched exactly.
+
+  Mitigation implemented: `useTabataTimer`'s `maybeTopUpNotifications`
+  counts phase transitions that elapse while the timer is *running*, and
+  once ~32 have gone by since the last (re)schedule, it schedules a fresh
+  batch of up to 48 more from the current position — see the `advance()` /
+  `maybeTopUpNotifications` wiring in `useTabataTimer.ts`. This closes the
+  gap for the common case (app foregrounded at least occasionally, or the
+  OS resumes the JS runtime briefly on `AppState` transitions). **It does
+  NOT close the gap for a session that is backgrounded continuously for its
+  entire remaining duration once a batch runs out** — nothing can run JS to
+  compute and schedule more in that case; this is an inherent limit of
+  "schedule everything ahead of time" local notifications, not fixable
+  without a different architecture (e.g. a much larger up-front batch, which
+  the OS cap prevents, or a server-side push relay, which is out of scope
+  for an offline-only app).
+
+  `SettingsScreen` now shows an explicit warning banner when the configured
+  `rounds`/`cycles` produce more phase-change events than
+  `MAX_SCHEDULED_NOTIFICATIONS`, telling the user notifications will only be
+  guaranteed for the first ~48 phase changes if they don't reopen the app.
 - **Sound on phase change**: **not implemented**, deliberately. See
   "Sound — why it's not here" below.
 - **Orientation**: portrait-only (`app.json` → `orientation: "portrait"`).
@@ -134,23 +164,47 @@ device (via Expo Go or a dev build), separately:**
   `UnavailabilityError` on web by design (caught and treated as "not
   granted" so it fails silently rather than crashing — see
   `ensureNotificationPermission`). This means the entire scheduling flow,
-  the permission prompt, delivery while backgrounded/killed, and the
-  iOS-64-pending-notification interaction with other apps are all
+  the permission prompt, and delivery while backgrounded/killed are all
   **unverified**. This also needs `expo-notifications`' Android channel setup
   to be exercised on a real device.
+- **The "64 pending notifications" iOS figure is *not* independently
+  confirmed.** I checked the current, live Apple documentation for
+  `UNUserNotificationCenter`, `add(_:withCompletionHandler:)`,
+  `UNNotificationRequest`, and `getPendingNotificationRequests` (fetched
+  their JSON content directly, since the rendered HTML pages are JS shells)
+  and found no explicit numeric limit stated on any of them. The "64" figure
+  is widely repeated in community sources and is historically associated
+  with the older, pre-`UserNotifications`-framework `UILocalNotification`
+  API, but I could not verify it applies identically, or at all, to the
+  modern API on current iOS versions. `MAX_SCHEDULED_NOTIFICATIONS = 48` in
+  `phaseNotifications.ts` is therefore "comfortably under a plausible but
+  unconfirmed number," not a verified-safe margin — **this needs checking
+  against a real device or current first-party Apple documentation**, not
+  taken on faith from this README.
+- **The 48-notification-cap / top-up gap (previous section) is unverified
+  end-to-end.** The foreground top-up logic was verified structurally (code
+  review + the event-count formula matching brute-force simulation of the
+  real transition code) but not by actually watching notifications arrive
+  during a long real session, on either OS.
 - **True backgrounding behavior** — the timestamp-based catch-up logic (in
   `useTabataTimer.ts` → `advance`) is logically verified by code review and
   by simulating "skip" (which exercises the same code path as a phase
   boundary being crossed), but the actual "put the app in the background for
   N minutes, come back, does it show the right phase" scenario needs a real
   OS to suspend/resume the JS runtime.
-- **`Alert.alert`-gated flows** (RESET confirm, delete confirm, close-while-
-  running confirm) — `react-native-web`'s `Alert.alert` is a hard no-op stub
-  (confirmed by reading `node_modules/react-native-web/src/exports/Alert`),
-  so none of these dialogs render on web at all. The store mutations they
-  gate (`remove`, `reset`) were verified directly by calling the underlying
-  store functions / non-Alert-gated paths, but the actual on-device prompt
-  and button wiring have not been visually confirmed.
+- **`Alert.alert`-gated flows are unverified, not "found in code and
+  therefore working."** RESET confirm, delete-session confirm, and
+  close-while-running confirm all gate their action behind
+  `Alert.alert(...)`. `react-native-web`'s `Alert.alert` is a hard no-op stub
+  (confirmed by reading `node_modules/react-native-web/src/exports/Alert`
+  directly — it's a one-line `class Alert { static alert() {} }`), so **none
+  of these dialogs have ever actually rendered or been clicked through in
+  this project, in any session.** What was checked is narrower than that:
+  the underlying store mutations (`remove`, `reset`) work when called
+  directly, and the code that wires the `Alert.alert(...)` call to the
+  right button/callback was read and looks correct — but "the dialog appears
+  and its buttons do what they say" has not been observed once. Treat this
+  as fully open, not "implemented, just not screenshotted."
 
 Two real bugs were found and fixed via the web smoke test before this
 wasn't possible for the above: a `deactivateKeepAwake` crash on unmount
@@ -174,8 +228,16 @@ check, on each:
 4. The permission prompt for notifications appears once, on first timer
    start, and the app still works (just silently, no notifications) if you
    deny it.
-5. RESET / delete-session / close-while-running all show their confirm
-   dialogs and honor Cancel/confirm correctly.
+5. **Long-session notification coverage** (the gap described above): create
+   a session with rounds/cycles that trip the new Settings warning (e.g. 20
+   rounds × 3 cycles), run it with the app in the foreground the whole time,
+   and confirm notifications keep arriving past the 48th phase change (i.e.
+   the top-up actually fires). Separately, confirm the warning banner itself
+   shows/hides correctly as you adjust the steppers.
+6. **RESET / delete-session / close-while-running confirm dialogs — this is
+   genuinely untested, not just "not screenshotted."** Confirm each dialog
+   actually appears, and that both its Cancel and its confirm button do the
+   right thing (Cancel leaves state untouched; confirm resets/deletes/exits).
 
 ## Known gaps (explicitly out of scope, see spec §7)
 
