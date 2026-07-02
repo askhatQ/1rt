@@ -97,21 +97,68 @@ static Figma mock can't encode behavior. Decisions made here:
   counts phase transitions that elapse while the timer is *running*, and
   once ~32 have gone by since the last (re)schedule, it schedules a fresh
   batch of up to 48 more from the current position — see the `advance()` /
-  `maybeTopUpNotifications` wiring in `useTabataTimer.ts`. This closes the
-  gap for the common case (app foregrounded at least occasionally, or the
-  OS resumes the JS runtime briefly on `AppState` transitions). **It does
-  NOT close the gap for a session that is backgrounded continuously for its
-  entire remaining duration once a batch runs out** — nothing can run JS to
-  compute and schedule more in that case; this is an inherent limit of
-  "schedule everything ahead of time" local notifications, not fixable
-  without a different architecture (e.g. a much larger up-front batch, which
-  the OS cap prevents, or a server-side push relay, which is out of scope
-  for an offline-only app).
+  `maybeTopUpNotifications` wiring in `useTabataTimer.ts`. **This only helps
+  one specific scenario, and conflating it with a general "the gap closes
+  itself" claim would be wrong. Two scenarios, and they behave very
+  differently:**
 
-  `SettingsScreen` now shows an explicit warning banner when the configured
-  `rounds`/`cycles` produce more phase-change events than
-  `MAX_SCHEDULED_NOTIFICATIONS`, telling the user notifications will only be
-  guaranteed for the first ~48 phase changes if they don't reopen the app.
+  - **(a) App stays in the foreground the whole session** (user is looking
+    at the timer screen, phone isn't locked/backgrounded). The `setInterval`
+    tick keeps firing, `maybeTopUpNotifications` keeps running, the gap
+    genuinely closes. `expo-keep-awake`'s own README describes it as
+    preventing "the screen sleeping when rendered" — nothing more; it's a
+    wake lock against idle *screen* sleep, not a background-execution grant,
+    so it correctly has no bearing on this scenario either way.
+  - **(b) User manually backgrounds the app mid-session** (presses home,
+    switches apps) and leaves it backgrounded for longer than it takes to
+    exhaust the current notification batch. `expo-keep-awake` does **not**
+    prevent this — it only stops idle screen-sleep while the app is
+    foregrounded; it has no effect once the user deliberately leaves the
+    app, and does not extend background execution time. Once backgrounded,
+    React Native's JS runtime is expected to be suspended by the OS (both
+    iOS and Android, without a declared background execution mode, which
+    this app doesn't have) — so `setInterval` stops firing and
+    `maybeTopUpNotifications` cannot run. **I have not observed this
+    directly — there's no real device in this sandbox to background an app
+    on.** This is inferred from `expo-keep-awake`'s documented scope and the
+    general, well-established iOS/Android background-execution model, not
+    from watching it happen. Treat it as a reasoned expectation, not a
+    tested fact, until checked on a real device.
+
+  So the accurate claim is: **the gap closes in scenario (a); scenario (b)
+  is expected, by design and by how backgrounding works on both platforms,
+  to NOT close it once a batch runs out — and that expectation itself is
+  unverified.** This needs a real-device test that specifically backgrounds
+  the app (not just locks the screen, and not just a brief `AppState`
+  blip) for longer than a topped-up batch's runway.
+
+  `SettingsScreen` shows an explicit warning banner (with a ⚠ marker) when
+  the configured `rounds`/`cycles` produce more phase-change events than
+  `MAX_SCHEDULED_NOTIFICATIONS`, explaining the (a)/(b) split above in plain
+  language. **This is deliberately informational, not blocking — the
+  "НАЧАТЬ" button stays enabled regardless.** Reasoning, engaging directly
+  with the obvious objection ("the user can just ignore the banner and walk
+  into the gap blind"):
+
+  - The gap only degrades a secondary convenience feature (background
+    phase-change alerts). The timer itself — on-screen countdown, ring,
+    round progress, haptics while foregrounded, and correct phase tracking
+    including catch-up when reopened — works fully regardless of the
+    notification cap. Ignoring the warning does not break the workout; it
+    only risks missing some alerts if the phone is put away for a very long
+    stretch.
+  - The spec's own stepper bounds explicitly permit configs that exceed the
+    cap (30 rounds × 10 cycles is a legitimate, spec-sanctioned session).
+    Blocking session creation over a secondary feature's platform ceiling
+    would stop users from building sessions the spec says are valid, which
+    is a worse trade-off than an occasionally-missed background alert.
+  - This is a judgment call, not a settled fact: the banner can genuinely be
+    scrolled past, and "informational text is enough" is exactly the kind
+    of decision that benefits from a second opinion. If real-device testing
+    shows people miss it in practice, the next reasonable step up (without
+    going all the way to blocking) would be a one-time confirm dialog on
+    "НАЧАТЬ" specifically when the cap is exceeded — not implemented here
+    since it wasn't clear that added friction is actually warranted yet.
 - **Sound on phase change**: **not implemented**, deliberately. See
   "Sound — why it's not here" below.
 - **Orientation**: portrait-only (`app.json` → `orientation: "portrait"`).
@@ -182,10 +229,32 @@ device (via Expo Go or a dev build), separately:**
   against a real device or current first-party Apple documentation**, not
   taken on faith from this README.
 - **The 48-notification-cap / top-up gap (previous section) is unverified
-  end-to-end.** The foreground top-up logic was verified structurally (code
-  review + the event-count formula matching brute-force simulation of the
-  real transition code) but not by actually watching notifications arrive
-  during a long real session, on either OS.
+  end-to-end, and its two scenarios have different confidence levels.**
+  Scenario (a) — app stays foregrounded — the top-up logic was verified
+  structurally (code review + the event-count formula matching brute-force
+  simulation of the real transition code) but not by actually watching
+  notifications arrive during a long real session. Scenario (b) — app
+  manually backgrounded mid-session — is not just unverified but is a
+  reasoned *expectation* based on `expo-keep-awake`'s documented scope and
+  general iOS/Android background-execution behavior, not something derived
+  from this app's own tested behavior at all. Don't treat "the gap closes"
+  as true for both; see the (a)/(b) split above.
+- **Hook dependency correctness has no tooling backing it at all.** This
+  project has no ESLint configured — no `.eslintrc*`, no `eslint.config.*`,
+  no `eslint` package in `package.json` (checked directly). So statements
+  like "the `useCallback` dependencies look right" reflect a manual read,
+  never a lint pass, in this project's history. Specifically checked in
+  this round: `maybeTopUpNotifications` in `useTabataTimer.ts` lists only
+  `[session]` as a dependency but also calls
+  `scheduleUpcomingPhaseNotifications`. That function is a top-level
+  `export async function` in `phaseNotifications.ts` — not defined inside a
+  component or hook, so its identity is stable across renders and isn't a
+  reactive value that needs to be in the deps array; everything else the
+  callback touches (`isRunningRef`, `transitionsSinceScheduleRef`,
+  `phaseEndAtRef`) is a ref, exempt by design since `.current` is always
+  read live. No stale-closure bug found there on this pass — but "no
+  ESLint" means nothing elsewhere in the codebase has been mechanically
+  checked for this class of bug either.
 - **True backgrounding behavior** — the timestamp-based catch-up logic (in
   `useTabataTimer.ts` → `advance`) is logically verified by code review and
   by simulating "skip" (which exercises the same code path as a phase
@@ -228,12 +297,25 @@ check, on each:
 4. The permission prompt for notifications appears once, on first timer
    start, and the app still works (just silently, no notifications) if you
    deny it.
-5. **Long-session notification coverage** (the gap described above): create
-   a session with rounds/cycles that trip the new Settings warning (e.g. 20
-   rounds × 3 cycles), run it with the app in the foreground the whole time,
-   and confirm notifications keep arriving past the 48th phase change (i.e.
-   the top-up actually fires). Separately, confirm the warning banner itself
-   shows/hides correctly as you adjust the steppers.
+5. **Long-session notification coverage — test scenario (a) and (b)
+   separately, they are not interchangeable:**
+   - **(a) Foreground the whole time:** create a session with rounds/cycles
+     that trip the new Settings warning (e.g. 20 rounds × 3 cycles), run it
+     with the app open and on-screen for the whole session, and confirm
+     notifications keep arriving past the 48th phase change (i.e. the
+     top-up actually fires instead of going silent).
+   - **(b) Manually backgrounded mid-session:** start the same kind of
+     long session, then press home / switch to another app and leave it
+     backgrounded (not just screen-locked) for longer than a batch's
+     runway. Check whether notifications stop arriving at that point — this
+     is the scenario I could not test at all and only reasoned about from
+     `expo-keep-awake`'s documented scope, so this result is the one most
+     likely to surprise.
+   - Separately, confirm the warning banner itself shows/hides correctly as
+     you adjust the steppers, and that "НАЧАТЬ" stays pressable even when
+     it's showing (it's intentionally non-blocking — see the rationale in
+     the Decisions section above; flag it if that judgment call feels
+     wrong in practice).
 6. **RESET / delete-session / close-while-running confirm dialogs — this is
    genuinely untested, not just "not screenshotted."** Confirm each dialog
    actually appears, and that both its Cancel and its confirm button do the

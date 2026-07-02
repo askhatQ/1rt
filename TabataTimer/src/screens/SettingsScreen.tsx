@@ -116,11 +116,12 @@ export function SettingsScreen({ navigation, route }: Props) {
           {exceedsNotificationCap && (
             <View style={styles.warningCard} accessibilityRole="text">
               <Text style={styles.warningText}>
-                В этой сессии {phaseChangeEvents} смен фазы — это больше, чем помещается в
-                разовое расписание фоновых уведомлений ({MAX_SCHEDULED_NOTIFICATIONS}). Пока
-                приложение открыто, уведомления будут пополняться автоматически, но если
-                свернуть приложение и не открывать его, уведомления придут только для первых
-                ~{MAX_SCHEDULED_NOTIFICATIONS} смен фазы, а дальше — молча.
+                ⚠ В этой сессии {phaseChangeEvents} смен фазы — больше, чем помещается в разовое
+                расписание фоновых уведомлений ({MAX_SCHEDULED_NOTIFICATIONS}). Если держать
+                приложение открытым, уведомления будут пополняться сами. Но если свернуть
+                приложение надолго и не открывать его — уведомления придут только для первых
+                ~{MAX_SCHEDULED_NOTIFICATIONS} смен фазы, а дальше молча прекратятся. Сам таймер
+                при этом продолжит работать корректно — пострадают только фоновые уведомления.
               </Text>
             </View>
           )}
