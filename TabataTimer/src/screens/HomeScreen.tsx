@@ -78,10 +78,18 @@ export function HomeScreen({ navigation }: Props) {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.empty}>
+            <View style={styles.emptyIconCircle}>
+              <Text style={styles.emptyIcon}>⏱️</Text>
+            </View>
             <Text style={styles.emptyTitle}>Пока нет сессий</Text>
             <Text style={styles.emptyText}>
               Создайте первую сессию Табата, чтобы начать тренировку
             </Text>
+            <CtaButton
+              label="СОЗДАТЬ ПЕРВУЮ СЕССИЮ"
+              onPress={openNewSession}
+              style={styles.emptyCta}
+            />
           </View>
         }
         renderItem={({ item }) => (
@@ -94,14 +102,16 @@ export function HomeScreen({ navigation }: Props) {
         )}
         ItemSeparatorComponent={() => <View style={{ height: spacing.cardGap }} />}
         ListFooterComponent={
-          <Pressable
-            onPress={openNewSession}
-            style={styles.newCard}
-            accessibilityRole="button"
-            accessibilityLabel="Новая сессия"
-          >
-            <Text style={styles.newCardText}>+ Новая сессия</Text>
-          </Pressable>
+          sessions.length > 0 ? (
+            <Pressable
+              onPress={openNewSession}
+              style={styles.newCard}
+              accessibilityRole="button"
+              accessibilityLabel="Новая сессия"
+            >
+              <Text style={styles.newCardText}>+ Новая сессия</Text>
+            </Pressable>
+          ) : null
         }
       />
 
@@ -179,6 +189,21 @@ const styles = StyleSheet.create({
   empty: {
     paddingTop: 48,
     alignItems: 'center',
+  },
+  emptyIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  emptyIcon: {
+    fontSize: 32,
+  },
+  emptyCta: {
+    marginTop: 28,
   },
   emptyTitle: {
     color: colors.white,
