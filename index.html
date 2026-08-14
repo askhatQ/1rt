@@ -1,685 +1,509 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Memory Detective</title>
-  <style>
-    :root {
-      --bg:      #0a0f2e;
-      --surface: #1a2040;
-      --surface2:#1e2650;
-      --border:  #1e3060;
-      --text:    #e8eaf0;
-      --accent:  #00d4ff;
-      --ok:      #00e676;
-      --fail:    #ff4466;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Шаңырақ — казахский ресторан</title>
+<meta name="description" content="Шаңырақ — этно-ресторан казахской кухни. Меню, акции и скидки, бронирование столов.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#122C46;
+    --navy-dark:#0B1E30;
+    --gold:#C9A24B;
+    --gold-light:#E4C97A;
+    --cream:#F6F0E2;
+    --terracotta:#B5502F;
+    --text:#26211A;
+    --radius:14px;
+    --maxw:1180px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Manrope',sans-serif;
+    color:var(--text);
+    background:var(--cream);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.logo{font-family:'Cormorant Garamond',serif;}
+  img{max-width:100%;display:block;}
+  a{color:inherit;text-decoration:none;}
+  ul{list-style:none;}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:14px 30px;
+    border-radius:999px;
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:.03em;
+    border:2px solid var(--gold);
+    background:var(--gold);
+    color:var(--navy-dark);
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(201,162,75,.35);}
+  .btn.outline{background:transparent;color:var(--cream);}
+  .btn.outline:hover{background:rgba(228,201,122,.12);}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:10px;
+    font-family:'Manrope',sans-serif;
+    font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--terracotta);
+    margin-bottom:14px;
+  }
+  .eyebrow::before,.eyebrow::after{content:"";width:26px;height:1px;background:var(--terracotta);}
+  .section{padding:96px 0;}
+  .section-head{max-width:640px;margin:0 auto 56px;text-align:center;}
+  .section-head h2{font-size:clamp(30px,4vw,44px);font-weight:600;color:var(--navy);}
+  .section-head p{margin-top:14px;color:#5b5346;font-size:16px;}
 
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+  /* ornament divider */
+  .ornament{
+    width:120px;height:22px;margin:18px auto 0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='22' viewBox='0 0 120 22'%3E%3Cg fill='none' stroke='%23C9A24B' stroke-width='1.6'%3E%3Cpath d='M0 11h34'/%3E%3Cpath d='M86 11h34'/%3E%3Ccircle cx='60' cy='11' r='9'/%3E%3Cpath d='M60 4v14M53 11h14M55.5 6.5l9 9M64.5 6.5l-9 9'/%3E%3C/g%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:center;
+  }
 
-    body {
-      background-color: var(--bg);
-      background-image:
-        radial-gradient(circle, rgba(0,212,255,0.10) 1px, transparent 1px),
-        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
-      background-size: 40px 40px, 40px 40px, 40px 40px;
-      background-position: 20px 20px, 0 0, 0 0;
-      color: var(--text);
-      font-family: system-ui, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+  /* ===== HEADER ===== */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    background:rgba(11,30,48,.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid rgba(228,201,122,.15);
+  }
+  .nav{display:flex;align-items:center;justify-content:space-between;height:78px;}
+  .logo{color:var(--cream);font-size:26px;font-weight:700;letter-spacing:.04em;display:flex;align-items:center;gap:10px;}
+  .logo span{color:var(--gold-light);}
+  .nav-links{display:flex;gap:34px;align-items:center;}
+  .nav-links a{
+    color:var(--cream);font-size:14.5px;font-weight:600;letter-spacing:.03em;
+    opacity:.85;position:relative;padding:4px 0;
+  }
+  .nav-links a:hover{opacity:1;color:var(--gold-light);}
+  .burger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:6px;}
+  .burger span{width:24px;height:2px;background:var(--cream);}
 
-    #app {
-      width: 100%;
-      max-width: 480px;
-      padding: 24px 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-    }
+  /* ===== HERO ===== */
+  .hero{
+    position:relative;
+    min-height:100vh;
+    display:flex;align-items:center;
+    color:var(--cream);
+    background:
+      linear-gradient(180deg,rgba(11,30,48,.55),rgba(11,30,48,.86)),
+      radial-gradient(circle at 20% 20%, rgba(201,162,75,.18), transparent 45%),
+      radial-gradient(circle at 80% 70%, rgba(181,80,47,.22), transparent 45%),
+      var(--navy-dark);
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";position:absolute;inset:0;opacity:.16;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg fill='none' stroke='%23E4C97A' stroke-width='1'%3E%3Ccircle cx='70' cy='70' r='46'/%3E%3Ccircle cx='70' cy='70' r='30'/%3E%3Cpath d='M70 8v124M8 70h124M28 28l84 84M112 28l-84 84'/%3E%3C/g%3E%3C/svg%3E");
+    background-size:140px 140px;
+  }
+  .hero-inner{position:relative;z-index:1;max-width:760px;padding:160px 24px 100px;margin:0 auto;text-align:center;}
+  .hero .eyebrow{color:var(--gold-light);}
+  .hero .eyebrow::before,.hero .eyebrow::after{background:var(--gold-light);}
+  .hero h1{font-size:clamp(44px,7vw,78px);font-weight:700;line-height:1.05;}
+  .hero h1 em{font-style:normal;color:var(--gold-light);}
+  .hero p{max-width:520px;margin:22px auto 38px;font-size:17.5px;color:#DCE2E9;}
+  .hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
+  .hero-strip{
+    position:relative;z-index:1;
+    display:flex;justify-content:center;gap:56px;flex-wrap:wrap;
+    padding:26px 24px 46px;
+    font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#B9C2CD;
+  }
+  .hero-strip b{display:block;color:var(--gold-light);font-family:'Cormorant Garamond',serif;font-size:26px;letter-spacing:0;font-weight:600;}
 
-    /* ── Grid ── */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      width: 100%;
-    }
+  /* ===== ABOUT ===== */
+  .about{background:var(--cream);}
+  .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;}
+  .about-visual{
+    aspect-ratio:4/5;border-radius:var(--radius);
+    background:
+      radial-gradient(circle at 30% 25%, rgba(228,201,122,.35), transparent 55%),
+      linear-gradient(160deg, var(--navy) 0%, var(--navy-dark) 100%);
+    position:relative;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 24px 50px rgba(18,44,70,.25);
+  }
+  .about-visual::before{
+    content:"";position:absolute;inset:14px;border:1px solid rgba(228,201,122,.5);border-radius:calc(var(--radius) - 4px);
+  }
+  .about-visual .shanyrak{
+    width:58%;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23E4C97A' stroke-width='2.2'%3E%3Ccircle cx='100' cy='100' r='86'/%3E%3Ccircle cx='100' cy='100' r='64'/%3E%3Cpath d='M100 14v172M14 100h172M35 35l130 130M165 35L35 165'/%3E%3Ccircle cx='100' cy='100' r='14'/%3E%3C/g%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:center;background-size:contain;
+    aspect-ratio:1;
+  }
+  .about-text .eyebrow{}
+  .about-text h2{font-size:clamp(28px,4vw,40px);color:var(--navy);font-weight:600;margin-bottom:18px;}
+  .about-text p{color:#5b5346;margin-bottom:16px;font-size:16px;}
+  .about-facts{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:28px;}
+  .fact{padding:18px 20px;background:#fff;border-radius:12px;border:1px solid #E9DFC7;}
+  .fact b{display:block;font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--terracotta);}
+  .fact span{font-size:13px;color:#7a7263;}
 
-    .cell {
-      aspect-ratio: 1;
-      background: var(--surface);
-      border: 2px solid var(--border);
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
-      cursor: pointer;
-      user-select: none;
-      position: relative;
-      overflow: hidden;
-      transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
-    }
+  /* ===== PROMO ===== */
+  .promo{background:var(--navy-dark);color:var(--cream);}
+  .promo .section-head p{color:#B9C2CD;}
+  .promo .section-head h2{color:var(--cream);}
+  .promo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .promo-card{
+    position:relative;
+    background:linear-gradient(160deg, rgba(228,201,122,.08), rgba(228,201,122,.02));
+    border:1px solid rgba(228,201,122,.25);
+    border-radius:var(--radius);
+    padding:34px 26px;
+    overflow:hidden;
+  }
+  .promo-card .badge{
+    display:inline-block;padding:6px 14px;border-radius:999px;
+    background:var(--terracotta);color:#fff;font-size:13px;font-weight:800;letter-spacing:.04em;
+    margin-bottom:18px;
+  }
+  .promo-card h3{font-size:22px;font-weight:600;margin-bottom:10px;color:var(--gold-light);}
+  .promo-card p{font-size:14.5px;color:#C9D1DA;}
+  .promo-card .tag{margin-top:16px;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:#8391A0;}
 
-    .cell::before {
-      content: '🛡️';
-      position: absolute;
-      font-size: 36px;
-      opacity: 0.08;
-      pointer-events: none;
-      user-select: none;
-    }
+  /* ===== MENU ===== */
+  .menu{background:var(--cream);}
+  .menu-tabs{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:44px;}
+  .menu-tab{
+    padding:11px 22px;border-radius:999px;border:1.5px solid #D8CBA6;
+    font-size:14px;font-weight:700;letter-spacing:.02em;
+    background:#fff;color:var(--navy);cursor:pointer;
+    transition:background .15s ease,color .15s ease,border-color .15s ease;
+  }
+  .menu-tab.active,.menu-tab:hover{background:var(--navy);border-color:var(--navy);color:var(--cream);}
+  .menu-panels{max-width:920px;margin:0 auto;}
+  .menu-panel{display:none;}
+  .menu-panel.active{display:block;animation:fade .3s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .menu-list{display:grid;grid-template-columns:1fr 1fr;gap:0 48px;}
+  .menu-item{
+    display:flex;justify-content:space-between;align-items:baseline;gap:14px;
+    padding:16px 0;border-bottom:1px dashed #D8CBA6;
+  }
+  .menu-item h4{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;color:var(--navy);}
+  .menu-item .desc{display:block;font-family:'Manrope',sans-serif;font-size:12.5px;color:#8a8272;margin-top:3px;}
+  .menu-item .price{white-space:nowrap;font-weight:800;color:var(--terracotta);font-size:15px;}
+  .menu-note{text-align:center;margin-top:40px;font-size:13.5px;color:#8a8272;}
 
-    .cell:hover {
-      border-color: var(--accent);
-      box-shadow: 0 0 10px rgba(0,212,255,0.35);
-      transform: scale(1.04);
-    }
+  /* ===== GALLERY ===== */
+  .gallery{background:var(--navy);}
+  .gallery .section-head h2, .gallery .section-head p{color:var(--cream);}
+  .gallery .section-head p{color:#C9D1DA;}
+  .gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+  .gallery-card{
+    aspect-ratio:1;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:40px;
+    background:linear-gradient(160deg, rgba(228,201,122,.16), rgba(228,201,122,.03));
+    border:1px solid rgba(228,201,122,.22);
+  }
 
-    /* empty solution slot — replaces dashed border */
-    .cell.slot {
-      border-color: var(--accent);
-      box-shadow: 0 0 14px rgba(0,212,255,0.45), inset 0 0 10px rgba(0,212,255,0.07);
-      animation: slot-pulse 2s ease-in-out infinite;
-    }
+  /* ===== CONTACT ===== */
+  .contact{background:var(--cream);}
+  .contact-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;}
+  .contact-card{background:#fff;border:1px solid #E9DFC7;border-radius:var(--radius);padding:40px;}
+  .contact-card h3{font-size:26px;color:var(--navy);margin-bottom:22px;}
+  .contact-row{display:flex;gap:14px;margin-bottom:18px;font-size:15px;color:#4a4438;}
+  .contact-row b{display:block;color:var(--navy);font-size:13px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
+  form{display:flex;flex-direction:column;gap:14px;}
+  form input,form textarea{
+    padding:14px 16px;border-radius:10px;border:1.5px solid #D8CBA6;
+    font-family:inherit;font-size:14.5px;background:#FBF7EC;
+  }
+  form textarea{min-height:90px;resize:vertical;}
+  form input:focus,form textarea:focus{outline:2px solid var(--gold);border-color:var(--gold);}
 
-    @keyframes slot-pulse {
-      0%, 100% { box-shadow: 0 0 10px rgba(0,212,255,0.3),  inset 0 0 8px  rgba(0,212,255,0.05); }
-      50%       { box-shadow: 0 0 22px rgba(0,212,255,0.65), inset 0 0 14px rgba(0,212,255,0.12); }
-    }
+  /* ===== FOOTER ===== */
+  footer{background:var(--navy-dark);color:#9AA6B2;padding:44px 0 28px;font-size:13.5px;}
+  .footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+  .footer-inner .logo{font-size:20px;}
+  .socials{display:flex;gap:14px;}
+  .socials a{width:36px;height:36px;border-radius:50%;border:1px solid rgba(228,201,122,.3);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gold-light);}
 
-    .cell.highlighted {
-      border-color: var(--accent);
-      background: rgba(0,212,255,0.10);
-      box-shadow: 0 0 14px rgba(0,212,255,0.55);
+  @media (max-width:860px){
+    .nav-links{
+      position:fixed;top:78px;left:0;right:0;
+      flex-direction:column;gap:0;
+      background:var(--navy-dark);
+      border-bottom:1px solid rgba(228,201,122,.15);
+      transform:translateY(-130%);
+      transition:transform .25s ease;
     }
-
-    @keyframes flash-correct {
-      0%, 100% { background: rgba(0,230,118,0.12); }
-      50%       { background: rgba(0,230,118,0.45); }
-    }
-    @keyframes flash-wrong {
-      0%, 100% { background: rgba(255,68,102,0.12); }
-      50%       { background: rgba(255,68,102,0.45); }
-    }
-
-    .cell.correct {
-      border-color: var(--ok);
-      background: rgba(0,230,118,0.12);
-      box-shadow: 0 0 14px rgba(0,230,118,0.5);
-      animation: flash-correct 300ms ease 2;
-    }
-
-    .cell.wrong {
-      border-color: var(--fail);
-      background: rgba(255,68,102,0.12);
-      box-shadow: 0 0 14px rgba(255,68,102,0.5);
-      animation: flash-wrong 300ms ease 2;
-    }
-
-    /* ── Tray ── */
-    .tray {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      width: 100%;
-      min-height: 56px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 10px;
-    }
-
-    .tray-item {
-      width: 48px;
-      height: 48px;
-      background: var(--surface2);
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      cursor: pointer;
-      user-select: none;
-      transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
-    }
-
-    .tray-item:hover {
-      border-color: var(--accent);
-      box-shadow: 0 0 10px rgba(0,212,255,0.5);
-      transform: scale(1.08);
-    }
-
-    .tray-item.selected {
-      border-color: var(--accent);
-      background: rgba(0,212,255,0.12);
-      box-shadow: 0 0 16px rgba(0,212,255,0.7);
-    }
-
-    /* ── Button ── */
-    .btn {
-      padding: 14px 40px;
-      background: linear-gradient(135deg, #0055ff, #00d4ff);
-      color: #fff;
-      border: none;
-      border-radius: 50px;
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      cursor: pointer;
-      box-shadow: 0 0 20px rgba(0,212,255,0.45), 0 0 40px rgba(0,212,255,0.15);
-      transition: box-shadow 0.2s, transform 0.1s, opacity 0.15s;
-    }
-
-    .btn:hover {
-      box-shadow: 0 0 30px rgba(0,212,255,0.7), 0 0 60px rgba(0,212,255,0.25);
-      transform: scale(1.04);
-    }
-
-    .btn:active  { transform: scale(0.97); }
-    .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-
-    /* ── Timer bar ── */
-    .timer-bar {
-      width: 100%;
-      height: 8px;
-      background: rgba(255,255,255,0.07);
-      border-radius: 4px;
-    }
-
-    .timer-bar__fill {
-      height: 100%;
-      width: 100%;
-      background: var(--ok);
-      border-radius: 4px;
-      transition: width 0.1s linear;
-    }
-
-    /* ── Misc ── */
-    .panel {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 24px 28px;
-      width: 100%;
-      text-align: center;
-      box-shadow: 0 0 40px rgba(0,0,0,0.4);
-    }
-
-    .header-row {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--accent);
-    }
-  </style>
+    .nav-links.open{transform:translateY(0);}
+    .nav-links a{width:100%;padding:16px 24px;border-bottom:1px solid rgba(228,201,122,.08);}
+    .burger{display:flex;}
+    .about-grid,.contact-grid{grid-template-columns:1fr;}
+    .about-visual{max-width:360px;margin:0 auto;}
+    .promo-grid{grid-template-columns:1fr;}
+    .menu-list{grid-template-columns:1fr;}
+    .gallery-grid{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
 </head>
 <body>
-  <div id="app"></div>
-  <script>
-    const LEVELS = [
-      { items: 4,  time: 8 },
-      { items: 6,  time: 6 },
-      { items: 8,  time: 5 },
-      { items: 10, time: 4 },
-      { items: 12, time: 3 },
-    ];
 
-    const EMOJIS = [
-      '🔍', '🗝️', '🕯️', '📷', '🎩', '🧲', '📜', '🔭',
-      '⚗️', '💎', '🦉', '🎭', '🪬', '🧪', '🔐', '📡',
-    ];
+<header>
+  <div class="wrap nav">
+    <a href="#top" class="logo">Шаңы<span>рақ</span></a>
+    <nav class="nav-links" id="navLinks">
+      <a href="#about">О нас</a>
+      <a href="#promo">Акции</a>
+      <a href="#menu">Меню</a>
+      <a href="#gallery">Галерея</a>
+      <a href="#contact">Контакты</a>
+    </nav>
+    <button class="burger" id="burger" aria-label="Меню"><span></span><span></span><span></span></button>
+  </div>
+</header>
 
-    const state = {
-      phase: 'idle',
-      level: 0,
-      score: 0,
-      solution: [],
-      placement: {},
-      selected: null,
-    };
+<section class="hero" id="top">
+  <div class="hero-inner">
+    <div class="eyebrow">Этно-ресторан казахской кухни</div>
+    <h1>Вкус степи <em>в сердце города</em></h1>
+    <p>Национальные блюда, приготовленные по семейным рецептам — бешбармак, казы, куырдак и манты — в атмосфере тепла казахской юрты.</p>
+    <div class="hero-actions">
+      <a href="#menu" class="btn">Смотреть меню</a>
+      <a href="#contact" class="btn outline">Забронировать столик</a>
+    </div>
+  </div>
+  <div class="hero-strip">
+    <div><b>15&nbsp;лет</b>традициям</div>
+    <div><b>40+</b>национальных блюд</div>
+    <div><b>09:00–00:00</b>без выходных</div>
+  </div>
+</section>
 
-    function shuffle(arr) {
-      const a = arr.slice();
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a;
-    }
+<section class="about section" id="about">
+  <div class="wrap about-grid">
+    <div class="about-visual"><div class="shanyrak"></div></div>
+    <div class="about-text">
+      <div class="eyebrow">О ресторане</div>
+      <h2>Дастархан, открытый для каждого гостя</h2>
+      <p>«Шаңырақ» — это купол юрты, символ дома и семьи в казахской культуре. Так же называется и наш ресторан: место, где степные традиции гостеприимства встречаются с современной подачей.</p>
+      <p>Мы готовим по рецептам, передающимся из поколения в поколение — от казы и бешбармака до нежной баурсак и ароматного чая с молоком.</p>
+      <div class="about-facts">
+        <div class="fact"><b>100%</b><span>натуральные продукты</span></div>
+        <div class="fact"><b>Тандыр</b><span>и казан на дровах</span></div>
+        <div class="fact"><b>80</b><span>посадочных мест</span></div>
+        <div class="fact"><b>Тои</b><span>и банкеты под ключ</span></div>
+      </div>
+    </div>
+  </div>
+</section>
 
-    function renderGrid(showSolution) {
-      const app = document.getElementById('app');
-      let grid = app.querySelector('.grid');
-      if (!grid) {
-        grid = document.createElement('div');
-        grid.className = 'grid';
-        app.appendChild(grid);
-      }
-      grid.innerHTML = '';
+<section class="promo section" id="promo">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow" style="color:var(--gold-light)">Акции и скидки</div>
+      <h2>Выгодные предложения</h2>
+      <p>Каждый день у нас есть повод заглянуть на дастархан.</p>
+    </div>
+    <div class="promo-grid">
+      <div class="promo-card">
+        <span class="badge">−20%</span>
+        <h3>Бизнес-ланч</h3>
+        <p>Скидка 20% на комплексные обеды с понедельника по пятницу с 12:00 до 16:00.</p>
+        <div class="tag">Будни · 12:00–16:00</div>
+      </div>
+      <div class="promo-card">
+        <span class="badge">−15%</span>
+        <h3>Семейный дастархан</h3>
+        <p>При заказе от 4 персон — скидка 15% на все горячие блюда и национальные закуски.</p>
+        <div class="tag">Ежедневно</div>
+      </div>
+      <div class="promo-card">
+        <span class="badge">В подарок</span>
+        <h3>День рождения</h3>
+        <p>Именинникам — праздничный баурсак и национальный чай в подарок ко всему заказу.</p>
+        <div class="tag">По документу</div>
+      </div>
+      <div class="promo-card">
+        <span class="badge">−10%</span>
+        <h3>Счастливые часы</h3>
+        <p>Скидка 10% на весь чек с 16:00 до 18:00 в будние дни.</p>
+        <div class="tag">Пн–Пт · 16:00–18:00</div>
+      </div>
+      <div class="promo-card">
+        <span class="badge">Тои и банкеты</span>
+        <h3>Организация торжеств</h3>
+        <p>Бесплатное оформление зала и скидка 10% при бронировании банкета от 20 гостей.</p>
+        <div class="tag">По предварительной записи</div>
+      </div>
+      <div class="promo-card">
+        <span class="badge">Карта гостя</span>
+        <h3>Программа лояльности</h3>
+        <p>Накопительная скидка до 15% для постоянных гостей ресторана «Шаңырақ».</p>
+        <div class="tag">Оформление на кассе</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-      for (let i = 0; i < 16; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.dataset.index = i;
+<section class="menu section" id="menu">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Наше меню</div>
+      <h2>Дастархан «Шаңырақ»</h2>
+      <p>Часть меню — как на нашей фирменной карточке блюд дня.</p>
+      <div class="ornament"></div>
+    </div>
 
-        if (showSolution) {
-          const entry = state.solution.find(s => s.index === i);
-          if (entry) {
-            cell.textContent = entry.emoji;
-            cell.classList.add('highlighted');
-          }
-        } else {
-          const isSolutionSlot = state.solution.some(s => s.index === i);
-          const placed = state.placement[i];
-          if (placed) {
-            cell.textContent = placed;
-            cell.classList.add('highlighted');
-          } else if (isSolutionSlot) {
-            cell.classList.add('slot');
-            cell.addEventListener('dragover', e => {
-              e.preventDefault();
-              cell.style.borderColor = '#fff';
-            });
-            cell.addEventListener('dragleave', () => {
-              cell.style.borderColor = '';
-            });
-            cell.addEventListener('drop', e => {
-              e.preventDefault();
-              cell.style.borderColor = '';
-              const emoji = e.dataTransfer.getData('text/plain');
-              if (_onDrop) _onDrop(i, emoji);
-            });
-          }
-        }
+    <div class="menu-tabs">
+      <button class="menu-tab active" data-tab="cold">Холодные закуски</button>
+      <button class="menu-tab" data-tab="hot">Горячие закуски</button>
+      <button class="menu-tab" data-tab="national">Национальные блюда</button>
+      <button class="menu-tab" data-tab="mains">Основные блюда</button>
+      <button class="menu-tab" data-tab="drinks">Напитки и десерты</button>
+    </div>
 
-        grid.appendChild(cell);
-      }
-    }
-
-    let _timerInterval = null;
-    let _onDrop = null;
-
-    function stopTimer() {
-      if (_timerInterval !== null) {
-        clearInterval(_timerInterval);
-        _timerInterval = null;
-      }
-    }
-
-    function runTimer(seconds, onEnd, onTick) {
-      stopTimer();
-
-      const fill = document.querySelector('.timer-bar__fill');
-      if (!fill) return;
-
-      const start = performance.now();
-      const duration = seconds * 1000;
-
-      fill.style.width = '100%';
-      fill.style.background = 'var(--ok)';
-      fill.style.boxShadow = '0 0 10px var(--ok)';
-
-      _timerInterval = setInterval(() => {
-        const elapsed = performance.now() - start;
-        const ratio = Math.max(0, 1 - elapsed / duration);
-
-        fill.style.width = (ratio * 100) + '%';
-
-        if (ratio <= 0.2) {
-          fill.style.background = 'var(--fail)';
-          fill.style.boxShadow = '0 0 10px var(--fail)';
-        } else if (ratio <= 0.5) {
-          fill.style.background = '#D4852A';
-          fill.style.boxShadow = '0 0 10px #D4852A';
-        } else {
-          fill.style.background = 'var(--ok)';
-          fill.style.boxShadow = '0 0 10px var(--ok)';
-        }
-
-        if (onTick) onTick(Math.ceil(ratio * seconds));
-
-        if (ratio <= 0) {
-          stopTimer();
-          onEnd();
-        }
-      }, 100);
-    }
-
-    function startLevel() {
-      const app = document.getElementById('app');
-      app.innerHTML = '';
-      state.phase = 'memorize';
-      state.placement = {};
-      state.selected = null;
-
-      const lv = LEVELS[state.level];
-      const indices = shuffle([...Array(16).keys()]).slice(0, lv.items);
-      const emojis = shuffle(EMOJIS).slice(0, lv.items);
-      state.solution = indices.map((index, i) => ({ index, emoji: emojis[i] }));
-
-      const header = document.createElement('div');
-      header.className = 'header-row';
-      header.innerHTML = `<span>Уровень ${state.level + 1} / ${LEVELS.length}</span><span>Счёт: ${state.score}</span>`;
-      app.appendChild(header);
-
-      const timerBar = document.createElement('div');
-      timerBar.className = 'timer-bar';
-      timerBar.innerHTML = '<div class="timer-bar__fill"></div>';
-      app.appendChild(timerBar);
-
-      const countdownWrap = document.createElement('div');
-      countdownWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;width:100%';
-
-      const label = document.createElement('div');
-      label.style.cssText = 'font-size:11px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.4)';
-      label.textContent = 'Запомни!';
-
-      const countdown = document.createElement('div');
-      countdown.style.cssText = `
-        font-size:72px;font-weight:900;line-height:1;
-        color:var(--accent);text-shadow:0 0 24px var(--accent),0 0 48px rgba(0,212,255,0.4);
-      `;
-      countdown.textContent = lv.time;
-
-      countdownWrap.appendChild(label);
-      countdownWrap.appendChild(countdown);
-      app.appendChild(countdownWrap);
-
-      renderGrid(true);
-      runTimer(lv.time, readyPause, secs => {
-        if (countdown.isConnected) countdown.textContent = secs;
-      });
-    }
-
-    function readyPause() {
-      stopTimer();
-      const app = document.getElementById('app');
-      app.innerHTML = '';
-
-      const screen = document.createElement('div');
-      screen.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:16px;padding:48px 28px;width:100%;text-align:center';
-      screen.innerHTML = `
-        <div style="font-size:64px;text-shadow:0 0 24px var(--accent)">🕵️</div>
-        <div style="font-size:32px;font-weight:900;letter-spacing:3px;text-transform:uppercase;
-                    color:var(--accent);text-shadow:0 0 20px var(--accent)">Расставляй!</div>
-      `;
-      app.appendChild(screen);
-      setTimeout(startPlace, 1000);
-    }
-
-    function startPlace() {
-      const app = document.getElementById('app');
-      app.innerHTML = '';
-      state.phase = 'place';
-      state.placement = {};
-      state.selected = null;
-
-      const header = document.createElement('div');
-      header.className = 'header-row';
-      header.innerHTML = `<span>Уровень ${state.level + 1} / ${LEVELS.length}</span><span>Счёт: ${state.score}</span>`;
-      app.appendChild(header);
-
-      const timerRow = document.createElement('div');
-      timerRow.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%';
-      const timerBar = document.createElement('div');
-      timerBar.className = 'timer-bar';
-      timerBar.style.flex = '1';
-      timerBar.innerHTML = '<div class="timer-bar__fill"></div>';
-      const secDisplay = document.createElement('span');
-      secDisplay.style.cssText = 'font-size:13px;font-weight:700;color:var(--accent);min-width:32px;text-align:right';
-      secDisplay.textContent = '35с';
-      timerRow.appendChild(timerBar);
-      timerRow.appendChild(secDisplay);
-      app.appendChild(timerRow);
-
-      const label = document.createElement('div');
-      label.style.cssText = 'font-size:11px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.4);width:100%';
-      label.textContent = 'Расставь улики по местам';
-      app.appendChild(label);
-
-      renderGrid(false);
-
-      const tray = document.createElement('div');
-      tray.className = 'tray';
-      app.appendChild(tray);
-
-      const trayEmojis = shuffle(state.solution.map(s => s.emoji));
-      const trayItems = [];
-
-      function refreshTray() {
-        const remaining = {};
-        trayEmojis.forEach(e => { remaining[e] = (remaining[e] || 0) + 1; });
-        Object.values(state.placement).forEach(e => { if (remaining[e]) remaining[e]--; });
-        trayItems.forEach(({ item, emoji }) => {
-          item.classList.toggle('selected', emoji === state.selected);
-          const avail = (remaining[emoji] || 0) > 0;
-          item.style.opacity = avail ? '' : '0.25';
-          item.style.pointerEvents = avail ? '' : 'none';
-        });
-      }
-
-      function selectItem(emoji) {
-        state.selected = state.selected === emoji ? null : emoji;
-        refreshTray();
-      }
-
-      function placeItem(idx) {
-        if (state.phase !== 'place') return;
-        if (!state.solution.some(s => s.index === idx)) return;
-
-        if (state.placement[idx] && !state.selected) {
-          delete state.placement[idx];
-          renderGrid(false);
-          refreshTray();
-          return;
-        }
-
-        if (!state.selected) return;
-
-        const prevIdx = Object.keys(state.placement).find(k => state.placement[k] === state.selected);
-        if (prevIdx !== undefined) delete state.placement[prevIdx];
-
-        state.placement[idx] = state.selected;
-        state.selected = null;
-
-        renderGrid(false);
-        refreshTray();
-
-        if (Object.keys(state.placement).length === state.solution.length) {
-          setTimeout(checkResult, 400);
-        }
-      }
-
-      trayEmojis.forEach(emoji => {
-        const item = document.createElement('div');
-        item.className = 'tray-item';
-        item.textContent = emoji;
-        item.draggable = true;
-        item.addEventListener('click', () => selectItem(emoji));
-        item.addEventListener('dragstart', e => {
-          e.dataTransfer.setData('text/plain', emoji);
-          e.dataTransfer.effectAllowed = 'move';
-          item.style.opacity = '0.4';
-        });
-        item.addEventListener('dragend', () => { item.style.opacity = ''; });
-        tray.appendChild(item);
-        trayItems.push({ item, emoji });
-      });
-
-      _onDrop = (idx, emoji) => {
-        state.selected = emoji;
-        placeItem(idx);
-      };
-
-      const grid = app.querySelector('.grid');
-      grid.addEventListener('click', e => {
-        const cell = e.target.closest('.cell');
-        if (!cell) return;
-        placeItem(parseInt(cell.dataset.index));
-      });
-
-      const btn = document.createElement('button');
-      btn.className = 'btn';
-      btn.textContent = 'Проверить';
-      btn.addEventListener('click', () => { stopTimer(); checkResult(); });
-      app.appendChild(btn);
-
-      runTimer(35, checkResult, secs => {
-        if (secDisplay.isConnected) secDisplay.textContent = secs + 'с';
-      });
-    }
-
-    function checkResult() {
-      if (state.phase === 'result') return;
-      stopTimer();
-      state.phase = 'result';
-
-      const total = state.solution.length;
-      let correct = 0;
-      state.solution.forEach(({ index, emoji }) => {
-        if (state.placement[index] === emoji) correct++;
-      });
-
-      const ratio = total > 0 ? correct / total : 0;
-      const earned = Math.round(ratio * (state.level + 1) * 10);
-      state.score += earned;
-
-      const grid = document.querySelector('.grid');
-      if (grid) {
-        grid.querySelectorAll('.cell').forEach(cell => {
-          const idx = parseInt(cell.dataset.index);
-          const solEntry = state.solution.find(s => s.index === idx);
-          if (!solEntry) return;
-          cell.textContent = solEntry.emoji;
-          cell.style.fontSize = '';
-          if (state.placement[idx] === solEntry.emoji) {
-            cell.classList.add('correct');
-          } else {
-            cell.classList.add('wrong');
-            if (state.placement[idx]) {
-              cell.textContent = state.placement[idx] + '→' + solEntry.emoji;
-              cell.style.fontSize = '11px';
-            }
-          }
-        });
-      }
-
-      const app = document.getElementById('app');
-      app.querySelector('.tray')?.remove();
-      app.querySelector('.btn')?.remove();
-
-      const stars = ratio === 1 ? '★★★' : ratio >= 0.5 ? '★★☆' : '★☆☆';
-      const isLastLevel = state.level === LEVELS.length - 1;
-
-      const panel = document.createElement('div');
-      panel.className = 'panel';
-      panel.innerHTML = `
-        <div style="font-size:30px;letter-spacing:6px;color:var(--accent);
-                    text-shadow:0 0 12px var(--accent)">${stars}</div>
-        <div style="font-size:20px;font-weight:800">${correct} / ${total} правильно</div>
-        <div style="font-size:13px;color:var(--accent);letter-spacing:1px">
-          +${earned} ОЧКОВ &nbsp;·&nbsp; ВСЕГО: ${state.score}
+    <div class="menu-panels">
+      <div class="menu-panel active" id="cold">
+        <div class="menu-list">
+          <div class="menu-item"><h4>Мясное ассорти<span class="desc">казы, шужык, жая, карта</span></h4><span class="price">3 690 ₸</span></div>
+          <div class="menu-item"><h4>Казы, шужык, каверме<span class="desc">домашнего приготовления</span></h4><span class="price">4 190 ₸</span></div>
+          <div class="menu-item"><h4>Рыбное ассорти<span class="desc">три вида холодного посола</span></h4><span class="price">3 980 ₸</span></div>
+          <div class="menu-item"><h4>Рыбная нарезка</h4><span class="price">3 450 ₸</span></div>
+          <div class="menu-item"><h4>Куырдак холодный</h4><span class="price">2 980 ₸</span></div>
+          <div class="menu-item"><h4>Ассорти солений</h4><span class="price">2 690 ₸</span></div>
+          <div class="menu-item"><h4>Рулетики с сыром</h4><span class="price">2 390 ₸</span></div>
+          <div class="menu-item"><h4>Казы<span class="desc">классический</span></h4><span class="price">3 190 ₸</span></div>
+          <div class="menu-item"><h4>Хе</h4><span class="price">2 290 ₸</span></div>
         </div>
-      `;
+      </div>
 
-      const btnRow = document.createElement('div');
-      btnRow.style.cssText = 'display:flex;gap:10px;margin-top:6px;';
-
-      const btnRepeat = document.createElement('button');
-      btnRepeat.className = 'btn';
-      btnRepeat.style.cssText = 'background:var(--surface2);box-shadow:none;border:1px solid var(--border)';
-      btnRepeat.textContent = 'Повторить';
-      btnRepeat.addEventListener('click', restartLevel);
-      btnRow.appendChild(btnRepeat);
-
-      panel.appendChild(btnRow);
-      app.appendChild(panel);
-
-      setTimeout(() => {
-        const btnNext = document.createElement('button');
-        btnNext.className = 'btn';
-        btnNext.textContent = isLastLevel ? 'В начало' : 'Дальше →';
-        btnNext.addEventListener('click', isLastLevel ? restartAll : nextLevel);
-        btnRow.appendChild(btnNext);
-      }, 650);
-    }
-
-    function nextLevel() {
-      state.level = Math.min(state.level + 1, LEVELS.length - 1);
-      startLevel();
-    }
-
-    function restartLevel() {
-      startLevel();
-    }
-
-    function restartAll() {
-      const hs = parseInt(localStorage.getItem('md_highscore') || '0');
-      if (state.score > hs) localStorage.setItem('md_highscore', state.score);
-      state.score = 0;
-      state.level = 0;
-      showStart();
-    }
-
-    function showStart() {
-      const hs = parseInt(localStorage.getItem('md_highscore') || '0');
-      const app = document.getElementById('app');
-      app.innerHTML = '';
-
-      const screen = document.createElement('div');
-      screen.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:28px;padding:32px 20px;width:100%;text-align:center';
-
-      screen.innerHTML = `
-        <div style="font-size:80px;line-height:1;
-                    text-shadow:0 0 20px #00d4ff,0 0 40px #00d4ff,0 0 80px #0055ff">🔍</div>
-        <div>
-          <div style="font-size:48px;font-weight:900;letter-spacing:4px;color:#fff;line-height:1.1;
-                      text-shadow:0 0 24px rgba(0,212,255,0.5)">MEMORY</div>
-          <div style="font-size:48px;font-weight:900;letter-spacing:4px;color:#fff;line-height:1.1;
-                      text-shadow:0 0 24px rgba(0,212,255,0.5)">DETECTIVE</div>
+      <div class="menu-panel" id="hot">
+        <div class="menu-list">
+          <div class="menu-item"><h4>Запечённые баклажаны с сыром</h4><span class="price">2 790 ₸</span></div>
+          <div class="menu-item"><h4>Курдюк с грибами</h4><span class="price">2 990 ₸</span></div>
+          <div class="menu-item"><h4>Манты с тыквой<span class="desc">на пару</span></h4><span class="price">2 690 ₸</span></div>
+          <div class="menu-item"><h4>Беляши с мясом</h4><span class="price">2 390 ₸</span></div>
+          <div class="menu-item"><h4>Хачапури в сырном конверте</h4><span class="price">2 890 ₸</span></div>
+          <div class="menu-item"><h4>Хрустящие баклажаны с помидорами</h4><span class="price">2 490 ₸</span></div>
+          <div class="menu-item"><h4>Куриные бургеры</h4><span class="price">2 290 ₸</span></div>
+          <div class="menu-item"><h4>Жульен</h4><span class="price">2 790 ₸</span></div>
+          <div class="menu-item"><h4>Мясо по-каталонски</h4><span class="price">3 290 ₸</span></div>
+          <div class="menu-item"><h4>Картофельные дольки с соусом</h4><span class="price">1 890 ₸</span></div>
         </div>
-        <div style="font-size:14px;font-style:italic;color:#4a6080;max-width:260px;line-height:1.6">
-          Запомни, где лежат улики, и расставь их по местам
+      </div>
+
+      <div class="menu-panel" id="national">
+        <div class="menu-list">
+          <div class="menu-item"><h4>Бешбармак<span class="desc">говядина или баранина</span></h4><span class="price">5 490 ₸</span></div>
+          <div class="menu-item"><h4>Куырдак<span class="desc">жаркое по-казахски</span></h4><span class="price">3 690 ₸</span></div>
+          <div class="menu-item"><h4>Казан-каспы</h4><span class="price">4 290 ₸</span></div>
+          <div class="menu-item"><h4>Самса с мясом<span class="desc">из тандыра</span></h4><span class="price">890 ₸</span></div>
+          <div class="menu-item"><h4>Манты<span class="desc">классические</span></h4><span class="price">2 590 ₸</span></div>
+          <div class="menu-item"><h4>Шашлык из баранины</h4><span class="price">3 290 ₸</span></div>
         </div>
-        ${hs > 0 ? `<div style="font-size:12px;letter-spacing:2px;color:var(--accent)">РЕКОРД: ${hs} ОЧКОВ</div>` : ''}
-      `;
+      </div>
 
-      const btn = document.createElement('button');
-      btn.className = 'btn';
-      btn.textContent = 'Начать';
-      btn.addEventListener('click', () => {
-        state.score = 0;
-        state.level = 0;
-        startLevel();
-      });
-      screen.appendChild(btn);
-      app.appendChild(screen);
-    }
+      <div class="menu-panel" id="mains">
+        <div class="menu-list">
+          <div class="menu-item"><h4>Лагман по-казахски</h4><span class="price">2 890 ₸</span></div>
+          <div class="menu-item"><h4>Плов с бараниной</h4><span class="price">2 990 ₸</span></div>
+          <div class="menu-item"><h4>Стейк из говядины</h4><span class="price">5 990 ₸</span></div>
+          <div class="menu-item"><h4>Форель на углях</h4><span class="price">4 590 ₸</span></div>
+          <div class="menu-item"><h4>Наурыз-көже<span class="desc">сезонное блюдо</span></h4><span class="price">2 190 ₸</span></div>
+          <div class="menu-item"><h4>Тандыр-кебаб</h4><span class="price">3 890 ₸</span></div>
+        </div>
+      </div>
 
-    showStart();
-  </script>
+      <div class="menu-panel" id="drinks">
+        <div class="menu-list">
+          <div class="menu-item"><h4>Баурсаки<span class="desc">с мёдом</span></h4><span class="price">1 490 ₸</span></div>
+          <div class="menu-item"><h4>Шертпек<span class="desc">национальный десерт</span></h4><span class="price">1 690 ₸</span></div>
+          <div class="menu-item"><h4>Чай с молоком</h4><span class="price">790 ₸</span></div>
+          <div class="menu-item"><h4>Кумыс</h4><span class="price">1 190 ₸</span></div>
+          <div class="menu-item"><h4>Шалап</h4><span class="price">990 ₸</span></div>
+          <div class="menu-item"><h4>Морс домашний</h4><span class="price">890 ₸</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="menu-note">Цены указаны в тенге (₸) и могут быть скорректированы администрацией ресторана.</p>
+  </div>
+</section>
+
+<section class="gallery section" id="gallery">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow" style="color:var(--gold-light)">Атмосфера</div>
+      <h2>Из нашей кухни</h2>
+    </div>
+    <div class="gallery-grid">
+      <div class="gallery-card">🍢</div>
+      <div class="gallery-card">🥟</div>
+      <div class="gallery-card">🍲</div>
+      <div class="gallery-card">🫓</div>
+      <div class="gallery-card">🍵</div>
+      <div class="gallery-card">🥘</div>
+      <div class="gallery-card">🧆</div>
+      <div class="gallery-card">🍞</div>
+    </div>
+  </div>
+</section>
+
+<section class="contact section" id="contact">
+  <div class="wrap contact-grid">
+    <div class="contact-card">
+      <h3>Забронировать столик</h3>
+      <form onsubmit="return false;">
+        <input type="text" placeholder="Ваше имя" required>
+        <input type="tel" placeholder="Телефон" required>
+        <input type="text" placeholder="Дата и время">
+        <textarea placeholder="Пожелания (количество гостей и т.д.)"></textarea>
+        <button class="btn" type="submit" style="align-self:flex-start;">Отправить заявку</button>
+      </form>
+    </div>
+    <div class="contact-card">
+      <h3>Контакты</h3>
+      <div class="contact-row"><div><b>Адрес</b>г. Алматы, ул. Абая, 25</div></div>
+      <div class="contact-row"><div><b>Телефон</b>+7 (700) 123-45-67</div></div>
+      <div class="contact-row"><div><b>Часы работы</b>ежедневно, 09:00–00:00</div></div>
+      <div class="contact-row"><div><b>Почта</b>info@shanyrak-restaurant.kz</div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-inner">
+    <a href="#top" class="logo">Шаңы<span style="color:var(--gold-light)">рақ</span></a>
+    <p>&copy; 2026 Ресторан «Шаңырақ». Все права защищены.</p>
+    <div class="socials">
+      <a href="#" aria-label="Instagram">IG</a>
+      <a href="#" aria-label="WhatsApp">WA</a>
+      <a href="#" aria-label="2GIS">2G</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const burger = document.getElementById('burger');
+  const navLinks = document.getElementById('navLinks');
+  burger.addEventListener('click', () => navLinks.classList.toggle('open'));
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+  const tabs = document.querySelectorAll('.menu-tab');
+  const panels = document.querySelectorAll('.menu-panel');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab).classList.add('active');
+    });
+  });
+</script>
 </body>
 </html>
